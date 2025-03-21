@@ -1,0 +1,64 @@
+package org.example.carpooling.Helper;
+
+import io.jsonwebtoken.*;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.util.Base64;
+import java.util.Date;
+
+@Component
+public class JwtUtil {
+
+    @Value("${spring.jwt.secret}")
+    private String secretKeyBase64;
+
+    private final long EXPIRATION_TIME = 86400000; // 1 ngày
+
+    private byte[] getSecretKey() {
+        return Base64.getDecoder().decode(secretKeyBase64);
+    }
+
+    public String generateToken(String username, String role) {
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("role", role) // Thêm role vào token
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(SignatureAlgorithm.HS256, secretKeyBase64)
+                .compact();
+    }
+
+    public String extractUsername(String token) {
+        return Jwts.parser()
+                .setSigningKey(getSecretKey())
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().setSigningKey(getSecretKey()).parseClaimsJws(token);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
+    }
+    public String extractRole(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKeyBase64)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
+    }
+    public String extractTokenFromRequest(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7); // Cắt bỏ "Bearer "
+        }
+        throw new RuntimeException("Missing token");
+    }
+}
