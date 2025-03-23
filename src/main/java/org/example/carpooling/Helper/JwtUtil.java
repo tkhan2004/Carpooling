@@ -20,9 +20,11 @@ public class JwtUtil {
         return Base64.getDecoder().decode(secretKeyBase64);
     }
 
+    // CÁI NÀY LÀ MỖI LẦN ĐĂNG NHẬP NÓ CHO 1 TOKEN RIÊNG
+    // JWT KHÔNG LƯU TOKEN TRÊN SERVER
     public String generateToken(String username, String role) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(username) // PHẦN USERNAME TRẢ VỀ TOKEN
                 .claim("role", role) // Thêm role vào token
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
@@ -30,6 +32,7 @@ public class JwtUtil {
                 .compact();
     }
 
+    // CÁI NÀY TRẢ VỀ TOKEN MỖI USERNAME
     public String extractUsername(String token) {
         return Jwts.parser()
                 .setSigningKey(getSecretKey())
@@ -46,6 +49,8 @@ public class JwtUtil {
             return false;
         }
     }
+
+    // CÁI NÀY THÌ THEO ROLE
     public String extractRole(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(secretKeyBase64)
@@ -54,6 +59,8 @@ public class JwtUtil {
                 .getBody()
                 .get("role", String.class);
     }
+
+    //
     public String extractTokenFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {

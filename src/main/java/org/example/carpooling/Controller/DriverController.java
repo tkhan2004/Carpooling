@@ -33,11 +33,10 @@ public class DriverController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
         }
 
-
         String username = jwtUtil.extractUsername(token);
         Optional<Users> users =  userRepository.findByEmail(username);
-        System.out.println("Extracted username from token: " + username);
-        System.out.println("Tìm thấy user: " + users.isPresent());
+//        System.out.println("Extracted username from token: " + username);
+//        System.out.println("Tìm thấy user: " + users.isPresent());
         if (!users.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
         }
