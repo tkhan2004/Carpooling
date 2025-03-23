@@ -1,7 +1,5 @@
 # 🚗 Carpooling System
-
-Hệ thống Carpooling (Đi chung xe) giúp kết nối tài xế và hành khách lại với nhau nhằm tối ưu chi phí, giảm ùn tắc giao thông và bảo vệ môi trường.
-
+Carpooling là một hệ thống giúp người có xe chia sẻ chỗ trống trên xe với những người có cùng tuyến đường, giúp tiết kiệm chi phí và bảo vệ môi trường.
 ## 🌟 Tính năng chính
 
 ### 👤 Quản trị
