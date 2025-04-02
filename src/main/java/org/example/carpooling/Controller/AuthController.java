@@ -83,19 +83,6 @@ public class AuthController {
         }
 
         catch (Exception e) {
-//            System.out.println("===> Lỗi xác thực: " + e.getMessage());
-//            e.printStackTrace();
-//
-//            Optional<Users> optionalUser = userRepository.findByEmail(request.getEmail());
-//            if (optionalUser.isPresent()) {
-//                Users user = optionalUser.get();
-//                System.out.println("ROLE: " + user.getRole().getName());
-//                System.out.println("Mật khẩu nhập vào: " + request.getPassword());
-//                System.out.println("Mật khẩu trong DB: " + user.getPassword());
-//                System.out.println("So sánh: " + passwordEncoder.matches(request.getPassword(), user.getPassword()));
-//            } else {
-//                System.out.println("Không tìm thấy user trong DB");
-//            } Check Bug
 
 
 //            byte[] key = Keys.secretKeyFor(SignatureAlgorithm.HS256).getEncoded();

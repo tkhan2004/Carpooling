@@ -1,11 +1,12 @@
 package org.example.carpooling.Dto;
 
-public class UserUpdateDTO {
-    private  String fullName;
-    private String phone;
-    private String avatarImage;
+import org.springframework.web.multipart.MultipartFile;
 
-    private String licenseImageUrl;
+public class UserUpdateDTO {
+    private String fullName;
+    private String phone;
+    private MultipartFile avatarImage;
+    private MultipartFile licenseImageUrl;
 
     public String getFullName() {
         return fullName;
@@ -23,29 +24,31 @@ public class UserUpdateDTO {
         this.phone = phone;
     }
 
-    public String getAvatarImage() {
+    public MultipartFile getAvatarImage() {
         return avatarImage;
     }
 
-    public void setAvatarImage(String avatarImage) {
+    public void setAvatarImage(MultipartFile avatarImage) {
         this.avatarImage = avatarImage;
     }
 
-    public String getLicenseImageUrl() {
+    public MultipartFile getLicenseImageUrl() {
         return licenseImageUrl;
     }
 
-    public void setLicenseImageUrl(String licenseImageUrl) {
+    public void setLicenseImageUrl(MultipartFile licenseImageUrl) {
         this.licenseImageUrl = licenseImageUrl;
     }
 
-    public String getVehicleImageUrl() {
+    public MultipartFile getVehicleImageUrl() {
         return vehicleImageUrl;
     }
 
-    public void setVehicleImageUrl(String vehicleImageUrl) {
+    public void setVehicleImageUrl(MultipartFile vehicleImageUrl) {
         this.vehicleImageUrl = vehicleImageUrl;
     }
 
-    private String vehicleImageUrl;
+    private MultipartFile vehicleImageUrl;
+
+    // Getter và Setter
 }

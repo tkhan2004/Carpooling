@@ -1,4 +1,4 @@
-package org.example.carpooling.Service;
+package org.example.carpooling.Service.Imp;
 
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Repository.UserRepository;
@@ -7,7 +7,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 
 @Service

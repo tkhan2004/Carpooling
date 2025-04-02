@@ -10,11 +10,20 @@ import org.example.carpooling.Repository.RoleRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserServiceImp implements UserService {
@@ -49,7 +58,7 @@ public class UserServiceImp implements UserService {
 
     @Override
     public Optional<Users> findByEmail(String email) {
-        return Optional.empty();
+        return userRepository.findByEmail(email);
     }
 
     @Override
@@ -71,26 +80,65 @@ public class UserServiceImp implements UserService {
         return " Đổi mật khẩu thành công ";
     }
 
+    // UserServiceImp.java
     @Override
     public String updateProfile(String token, UserUpdateDTO userUpdateDTO) {
         String email = jwtUtil.extractUsername(token);
-        Optional<Users>  optionalUsers = userRepository.findByEmail(email);
-        if(!optionalUsers.isPresent()){
-            throw new UsernameNotFoundException("Không tìm thấy người dùng");
+        Optional<Users> optionalUser = userRepository.findByEmail(email);
+
+        if (optionalUser.isEmpty()) {
+            return "Người dùng không tồn tại";
         }
 
-        Users users =  optionalUsers.get();
-        users.setFullName(userUpdateDTO.getFullName());
-        users.setPhone(userUpdateDTO.getPhone());
+        Users user = optionalUser.get();
+        user.setFullName(userUpdateDTO.getFullName());
+        user.setPhone(userUpdateDTO.getPhone());
 
-        if(users.getRole().getName().equals("DRIVER")){
-            users.setAvatarImage(userUpdateDTO.getAvatarImage());
-            users.setLicenseImageUrl(userUpdateDTO.getLicenseImageUrl());
-            users.setVehicleImageUrl(userUpdateDTO.getVehicleImageUrl());
+        // Upload image if present
+        // Upload image if present
+        if (userUpdateDTO.getAvatarImage() != null) {
+            saveImage(token, userUpdateDTO.getAvatarImage(), "avatar");
         }
-        userRepository.save(users);
-        return " Cập nhật thông tin thành công";
+        if (userUpdateDTO.getLicenseImageUrl() != null) {
+            saveImage(token, userUpdateDTO.getLicenseImageUrl(), "license");
+        }
+        if (userUpdateDTO.getVehicleImageUrl() != null) {
+            saveImage(token, userUpdateDTO.getVehicleImageUrl(), "vehicle");
+        }
+
+        userRepository.save(user);
+        return "Cập nhật thành công";
     }
 
+    @Override
+    public String saveImage(String token, MultipartFile file, String type) {
+        String email = jwtUtil.extractUsername(token);
+        Optional<Users> optionalUser = userRepository.findByEmail(email);
+
+        if (optionalUser.isEmpty()) {
+            return "Người dùng không tồn tại";
+        }
+
+        Users user = optionalUser.get();
+        String uploadPath = "uploads/";
+        new File(uploadPath).mkdirs();
+
+        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        String filePath = uploadPath + fileName;
+
+        try {
+            Files.copy(file.getInputStream(), new File(filePath).toPath());
+            switch (type) {
+                case "avatar" -> user.setAvatarImage(filePath);
+                case "license" -> user.setLicenseImageUrl(filePath);
+                case "vehicle" -> user.setVehicleImageUrl(filePath);
+            }
+            userRepository.save(user);
+            return "Upload thành công";
+        } catch (IOException e) {
+            return "Lỗi khi upload ảnh";
+        }
+    }
 
 }
+
