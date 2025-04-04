@@ -2,11 +2,13 @@ package org.example.carpooling.Service;
 
 import org.example.carpooling.Dto.ChangePassDTO;
 import org.example.carpooling.Dto.RegisterRequest;
+import org.example.carpooling.Dto.UserDTO;
 import org.example.carpooling.Dto.UserUpdateDTO;
 import org.example.carpooling.Entity.Users;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
@@ -15,4 +17,5 @@ public interface UserService {
     String changePass(String token, ChangePassDTO  changePassDTO);
     String saveImage(String token, MultipartFile file, String type);
     String updateProfile(String token, UserUpdateDTO userUpdateDTO);
+    List<UserDTO> getAllUserByRole(String roleName);
 }

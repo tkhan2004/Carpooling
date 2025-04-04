@@ -2,6 +2,7 @@ package org.example.carpooling.Service.Imp;
 
 import org.example.carpooling.Dto.ChangePassDTO;
 import org.example.carpooling.Dto.RegisterRequest;
+import org.example.carpooling.Dto.UserDTO;
 import org.example.carpooling.Dto.UserUpdateDTO;
 import org.example.carpooling.Entity.Role;
 import org.example.carpooling.Entity.Users;
@@ -22,8 +23,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImp implements UserService {
@@ -108,6 +113,20 @@ public class UserServiceImp implements UserService {
 
         userRepository.save(user);
         return "Cập nhật thành công";
+    }
+
+    @Override
+    public List<UserDTO> getAllUserByRole(String roleName) {
+        List<Users>  users = userRepository.findAllByRole(roleName);
+        return users.stream()
+                .map(user -> new UserDTO(
+                        user.getId(),
+                        user.getFullName(),
+                        user.getEmail(),
+                        user.getPhone(),
+                        user.getRole().getName()
+                ))
+                .toList();
     }
 
     @Override

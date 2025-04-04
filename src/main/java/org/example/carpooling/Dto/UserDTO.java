@@ -1,5 +1,10 @@
 package org.example.carpooling.Dto;
 
+import org.example.carpooling.Entity.Role;
+import org.example.carpooling.Entity.Users;
+
+import java.util.stream.Collectors;
+
 public class UserDTO {
     private Long id;
 
@@ -49,6 +54,17 @@ public class UserDTO {
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.role = role;
+    }
+    public UserDTO(Users user) {
+        this.id = user.getId();
+        this.fullName = user.getFullName();
+        this.email = user.getEmail();
+        this.phoneNumber = user.getPhone();
+        if (user.getRole() != null) {
+            this.role = user.getRole().getName();
+        } else {
+            this.role = "";
+        }
     }
 
     private String fullName;

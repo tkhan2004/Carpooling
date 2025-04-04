@@ -18,6 +18,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/driver")
+@PreAuthorize("hasRole('DRIVER')")
 public class DriverController {
     @Autowired
     JwtUtil jwtUtil;
@@ -26,7 +27,7 @@ public class DriverController {
     UserRepository userRepository;
 
     @GetMapping("/profile")
-    @PreAuthorize("hasRole('DRIVER')")
+//    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<?> getProfile(HttpServletRequest request) {
         String token = jwtUtil.extractTokenFromRequest(request);
         if (token == null) {
@@ -45,6 +46,7 @@ public class DriverController {
         UserDTO userDTO = new UserDTO(user.getId(),user.getFullName(),user.getEmail(),user.getPhone(),user.getRole().getName());
         return ResponseEntity.status(HttpStatus.OK).body(userDTO);
     }
+
 
 
 }

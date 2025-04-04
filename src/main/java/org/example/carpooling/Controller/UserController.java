@@ -3,6 +3,7 @@ package org.example.carpooling.Controller;
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.carpooling.Dto.ChangePassDTO;
 import org.example.carpooling.Dto.RideRequestDTO;
+import org.example.carpooling.Dto.UserDTO;
 import org.example.carpooling.Dto.UserUpdateDTO;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Helper.JwtUtil;
@@ -29,6 +30,18 @@ public class UserController
 
     @Autowired
     private UserService userService;
+
+
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<UserDTO>>> getAlUser(HttpServletRequest request){
+        String token = jwtUtil.extractTokenFromRequest(request);
+        String role = jwtUtil.extractRole(token);
+        List<UserDTO> userDTOs = userService.getAllUserByRole(role);
+        ApiResponse<List<UserDTO>> response = new ApiResponse<>(true, "Lấy người dùng thành công", userDTOs);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
     @PutMapping("/change-pass")
     @PreAuthorize("hasAnyRole('DRIVER', 'PASSENGER')")
@@ -66,9 +79,8 @@ public class UserController
             userUpdateDTO.setVehicleImageUrl(vehicleImage);
         }
 
-
         String message = userService.updateProfile(token, userUpdateDTO);
-        ApiResponse<Object> response = (new ApiResponse<>(false,  message, null));
+        ApiResponse<Object> response = (new ApiResponse<>(true,  message, null));
         return ResponseEntity.ok(response);
     }
 }

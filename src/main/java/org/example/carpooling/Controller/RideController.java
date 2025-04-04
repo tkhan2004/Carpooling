@@ -33,11 +33,55 @@ public class RideController {
         return  ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping
-    @PreAuthorize("hasRole('DRIVER')")
+    @GetMapping("/my-rides")
+    @PreAuthorize(("hasRole('DRIVER')"))
+    public ResponseEntity<ApiResponse<List<RideRequestDTO>>> getRide(HttpServletRequest request) {
+        String token = jwtUtil.extractTokenFromRequest(request);
+        String email = jwtUtil.extractUsername(token);
+        rideService.getRidesByDriverEmail(email);
+        ApiResponse<List<RideRequestDTO>> response = new ApiResponse<>(true, "Danh sách chuyến đi", rideService.getRidesByDriverEmail(email));
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/available")
+    @PreAuthorize("hasRole('PASSENGER')")
     public  ResponseEntity<ApiResponse<List<RideRequestDTO>>> getAllRideActive() {
         List<RideRequestDTO> rides = rideService.getAllRideActive();
         ApiResponse<List<RideRequestDTO>> response = (new ApiResponse<>(true,  "success", rides));
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> getRideById(@PathVariable Long id, HttpServletRequest request) {
+        String token = jwtUtil.extractTokenFromRequest(request);
+        String email = jwtUtil.extractUsername(token);
+
+        RideRequestDTO rides = rideService.findDetailRideById(id);
+
+        if (rides == null) {
+            ApiResponse<String> response = new ApiResponse<>(
+                    false,
+                    "Chuyến đi không tồn tại",
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        ApiResponse<RideRequestDTO> response = new ApiResponse<>(
+                true,
+                "Danh sách chuyến đi",
+                rides
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('DRIVER')")
+    public ResponseEntity<ApiResponse<?>> deleteRide(@PathVariable Long id, HttpServletRequest request) {
+        String token = jwtUtil.extractTokenFromRequest(request);
+        String email = jwtUtil.extractUsername(token);
+        RideRequestDTO ride = rideService.cancelRideById(id, email);
+        ApiResponse<RideRequestDTO> response = new ApiResponse<>(true,"Huỷ bỏ chuyến đi thành công",ride);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
