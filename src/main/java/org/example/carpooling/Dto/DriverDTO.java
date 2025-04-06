@@ -6,8 +6,19 @@ import org.example.carpooling.Entity.Users;
 
 import java.util.stream.Collectors;
 
-public class UserDTO {
+public class DriverDTO {
     private Long id;
+
+    public DriverStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(DriverStatus status) {
+        this.status = status;
+    }
+
+    private DriverStatus status;
+
 
     public Long getId() {
         return id;
@@ -49,23 +60,14 @@ public class UserDTO {
         this.role = role;
     }
 
-    public UserDTO(Long id, String fullName, String email, String phoneNumber, String role) {
+    public DriverDTO(Long id, String fullName, String email, String phoneNumber, String role,DriverStatus status) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.role = role;
-    }
-    public UserDTO(Users user) {
-        this.id = user.getId();
-        this.fullName = user.getFullName();
-        this.email = user.getEmail();
-        this.phoneNumber = user.getPhone();
-        if (user.getRole() != null) {
-            this.role = user.getRole().getName();
-        } else {
-            this.role = "";
-        }
+        this.status = status;
+
     }
 
     private String fullName;

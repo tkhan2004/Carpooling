@@ -33,16 +33,6 @@ public class UserController
 
 
 
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<UserDTO>>> getAlUser(HttpServletRequest request){
-        String token = jwtUtil.extractTokenFromRequest(request);
-        String role = jwtUtil.extractRole(token);
-        List<UserDTO> userDTOs = userService.getAllUserByRole(role);
-        ApiResponse<List<UserDTO>> response = new ApiResponse<>(true, "Lấy người dùng thành công", userDTOs);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
     @PutMapping("/change-pass")
     @PreAuthorize("hasAnyRole('DRIVER', 'PASSENGER')")
     public ResponseEntity<?> changePass(@RequestBody ChangePassDTO  changePassDTO, HttpServletRequest request) {

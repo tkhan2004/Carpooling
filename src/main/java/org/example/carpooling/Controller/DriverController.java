@@ -1,11 +1,15 @@
 package org.example.carpooling.Controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.example.carpooling.Dto.RideRequestDTO;
 import org.example.carpooling.Dto.UserDTO;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Helper.JwtUtil;
+import org.example.carpooling.Payload.ApiResponse;
+import org.example.carpooling.Repository.RideRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Security.JwtAuthenticationFilter;
+import org.example.carpooling.Service.RideService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,11 +18,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/driver")
-@PreAuthorize("hasRole('DRIVER')")
 public class DriverController {
     @Autowired
     JwtUtil jwtUtil;
@@ -26,8 +30,14 @@ public class DriverController {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    RideRepository rideRepository;
+
+    @Autowired
+    RideService rideService;
+
     @GetMapping("/profile")
-//    @PreAuthorize("hasRole('DRIVER')")
+    @PreAuthorize("hasAnyRole('DRIVER')")
     public ResponseEntity<?> getProfile(HttpServletRequest request) {
         String token = jwtUtil.extractTokenFromRequest(request);
         if (token == null) {
@@ -47,6 +57,15 @@ public class DriverController {
         return ResponseEntity.status(HttpStatus.OK).body(userDTO);
     }
 
+    @GetMapping("/my-rides")
+    @PreAuthorize(("hasRole('DRIVER')"))
+    public ResponseEntity<ApiResponse<List<RideRequestDTO>>> getRide(HttpServletRequest request) {
+        String token = jwtUtil.extractTokenFromRequest(request);
+        String email = jwtUtil.extractUsername(token);
+        rideService.getRidesByDriverEmail(email);
+        ApiResponse<List<RideRequestDTO>> response = new ApiResponse<>(true, "Danh sách chuyến đi", rideService.getRidesByDriverEmail(email));
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 
 
 }

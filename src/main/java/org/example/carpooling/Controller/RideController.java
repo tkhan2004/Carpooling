@@ -33,15 +33,6 @@ public class RideController {
         return  ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/my-rides")
-    @PreAuthorize(("hasRole('DRIVER')"))
-    public ResponseEntity<ApiResponse<List<RideRequestDTO>>> getRide(HttpServletRequest request) {
-        String token = jwtUtil.extractTokenFromRequest(request);
-        String email = jwtUtil.extractUsername(token);
-        rideService.getRidesByDriverEmail(email);
-        ApiResponse<List<RideRequestDTO>> response = new ApiResponse<>(true, "Danh sách chuyến đi", rideService.getRidesByDriverEmail(email));
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
 
     @GetMapping("/available")
     @PreAuthorize("hasRole('PASSENGER')")

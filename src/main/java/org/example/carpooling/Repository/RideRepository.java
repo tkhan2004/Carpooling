@@ -9,7 +9,6 @@ import java.util.List;
 @Repository
 public interface RideRepository extends JpaRepository<Rides, Long> {
     List<Rides> findByDriver_Email(String email);
-    List<Rides> findByStatus(String status);
 
     @Query("SELECT new org.example.carpooling.Dto.RideRequestDTO(" +
             "r.id, r.available_seats, r.driver.fullName, r.driver.email, " +

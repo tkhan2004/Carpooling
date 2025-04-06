@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
+import org.example.carpooling.Entity.Status.DriverStatus;
 
 @Entity
 @Table(name = "users")
@@ -141,6 +142,29 @@ public class Users {
 
     @OneToMany(mappedBy = "pasenger", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookings = new ArrayList<>();
+
+    public DriverStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(DriverStatus status) {
+        this.status = status;
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private DriverStatus status = DriverStatus.PENDING;
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
+
+    @Column(columnDefinition = "TEXT")
+    private String rejectionReason;
 
 
 }

@@ -119,7 +119,7 @@ public class RideServiceImp implements RideService {
 
     @Override
     public RideRequestDTO cancelRideById(Long rideId, String email) {
-        // Thay đổi từ 'findCancleRideById' thành 'findCancelRideById'
+
         Rides ride = rideRepository.findCancelRideById(rideId);
 
         if ("CANCELLED".equals(ride.getStatus())) {

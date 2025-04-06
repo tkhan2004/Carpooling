@@ -1,9 +1,12 @@
 package org.example.carpooling.Dto;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public class RegisterRequest {
     private String email;
     private Long roleId; // Thêm dòng này
     private String phone;
+
 
     public String getPhone() {
         return phone;
@@ -26,11 +29,11 @@ public class RegisterRequest {
     }
 
 
-    public RegisterRequest(String email, String password, String fullName) {
-        this.email = email;
-        this.password = password;
-        this.fullName = fullName;
-    }
+//    public RegisterRequest(String email, String password, String fullName) {
+//        this.email = email;
+//        this.password = password;
+//        this.fullName = fullName;
+//    }
 
     public void setEmail(String email) {
         this.email = email;
