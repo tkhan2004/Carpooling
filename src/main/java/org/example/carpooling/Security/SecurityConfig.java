@@ -62,12 +62,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // Permit OPTIONS preflight requests globally
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // <-- ADD THIS LINE
-                        // Your existing public and role-based rules
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll() // Assuming /api/auth includes /login
+                        .requestMatchers("/api/file/**").permitAll() // 👈 Thêm dòng này// Your existing public and role-based rules
+                        .requestMatchers("/api/file/view/**").permitAll() // 👈 Thêm dòng này// Your existing public and role-based rules
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // This protects /api/admin/user
                         .requestMatchers("/api/driver/**").hasRole("DRIVER")
                         .requestMatchers("/api/passenger/**").hasRole("PASSENGER")
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // This protects /api/admin/user
                         // Add other permitAll endpoints if needed (e.g., swagger-ui)
                         // .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated() // All other requests need authentication

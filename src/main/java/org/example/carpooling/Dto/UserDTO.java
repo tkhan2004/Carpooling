@@ -3,6 +3,7 @@ package org.example.carpooling.Dto;
 import org.example.carpooling.Entity.Role;
 import org.example.carpooling.Entity.Status.DriverStatus;
 import org.example.carpooling.Entity.Users;
+import org.example.carpooling.Service.FileService;
 
 import java.util.stream.Collectors;
 
@@ -48,6 +49,15 @@ public class UserDTO {
     public void setRole(String role) {
         this.role = role;
     }
+    private String avatarUrl;
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
 
     public UserDTO(Long id, String fullName, String email, String phoneNumber, String role) {
         this.id = id;
@@ -56,15 +66,17 @@ public class UserDTO {
         this.phoneNumber = phoneNumber;
         this.role = role;
     }
-    public UserDTO(Users user) {
+    public UserDTO(Users user, FileService fileService) {
         this.id = user.getId();
         this.fullName = user.getFullName();
         this.email = user.getEmail();
         this.phoneNumber = user.getPhone();
-        if (user.getRole() != null) {
-            this.role = user.getRole().getName();
+        this.role = user.getRole() != null ? user.getRole().getName() : "";
+
+        if (user.getAvatarImage() != null && !user.getAvatarImage().trim().isEmpty()) {
+            this.avatarUrl = fileService.generateFileUrl(user.getAvatarImage());
         } else {
-            this.role = "";
+            this.avatarUrl = "/default-avatar.png"; // hoặc null, tùy bạn xử lý frontend
         }
     }
 

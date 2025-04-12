@@ -18,6 +18,10 @@ public class DriverDTO {
     }
 
     private DriverStatus status;
+    private String licenseImageUrl;
+    private String vehicleImageUrl;
+    private String avatarImage;
+
 
 
     public Long getId() {
@@ -50,6 +54,42 @@ public class DriverDTO {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String getLicenseImageUrl() {
+        return licenseImageUrl;
+    }
+
+    public void setLicenseImageUrl(String licenseImageUrl) {
+        this.licenseImageUrl = licenseImageUrl;
+    }
+
+    public String getVehicleImageUrl() {
+        return vehicleImageUrl;
+    }
+
+    public void setVehicleImageUrl(String vehicleImageUrl) {
+        this.vehicleImageUrl = vehicleImageUrl;
+    }
+
+    public String getAvatarImage() {
+        return avatarImage;
+    }
+
+    public void setAvatarImage(String avatarImage) {
+        this.avatarImage = avatarImage;
+    }
+
+    public DriverDTO(Long id, DriverStatus status, String licenseImageUrl, String vehicleImageUrl, String avatarImage, String fullName, String email, String phoneNumber, String role) {
+        this.id = id;
+        this.status = status;
+        this.licenseImageUrl = licenseImageUrl;
+        this.vehicleImageUrl = vehicleImageUrl;
+        this.avatarImage = avatarImage;
+        this.fullName = fullName;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.role = role;
     }
 
     public String getRole() {

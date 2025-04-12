@@ -8,6 +8,8 @@ import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Payload.ApiResponse;
 import org.example.carpooling.Repository.UserRepository;
+import org.example.carpooling.Service.FileService;
+import org.example.carpooling.Service.Imp.FileServiceImp;
 import org.example.carpooling.Service.Imp.UserServiceImp;
 import org.example.carpooling.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +49,11 @@ public class AuthController {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    @Autowired
+    FileService fileService;
+    @Autowired
+    private FileServiceImp fileServiceImp;
+
     @PostMapping(value = "/passenger-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<UserDTO>> passengerRegister(@RequestParam String email,
                                                @RequestParam String password,
@@ -64,7 +71,7 @@ public class AuthController {
         request.setPhone(phone);
         try {
             Users registeredUser = userService.passengerRegister(request, avatarImage);
-            UserDTO userDTO = new UserDTO(registeredUser.getId(),registeredUser.getFullName(),registeredUser.getEmail(),registeredUser.getPhone(),registeredUser.getPassword());
+            UserDTO userDTO = new UserDTO(registeredUser, fileService);
             // Trường hợp thành công
             ApiResponse<UserDTO> successResponse = new ApiResponse<>(
                     true,
@@ -119,12 +126,14 @@ public class AuthController {
             // Chuyển đổi sang DriverDTO
             DriverDTO driverDTO = new DriverDTO(
                     registeredUser.getId(),
+                    registeredUser.getStatus(),
+                    fileService.generateFileUrl(registeredUser.getLicenseImageUrl()),
+                    fileService.generateFileUrl(registeredUser.getVehicleImageUrl()),
+                    fileService.generateFileUrl(registeredUser.getAvatarImage()),
                     registeredUser.getFullName(),
                     registeredUser.getEmail(),
                     registeredUser.getPhone(),
-                    registeredUser.getRole().getName(),
-                    registeredUser.getStatus() // Nếu có
-                    // Thêm các trường khác nếu cần
+                    registeredUser.getRole().getName()
             );
 
             ApiResponse<DriverDTO> successResponse = new ApiResponse<>(
@@ -191,20 +200,7 @@ public class AuthController {
             ApiResponse<String> errorResponse = new ApiResponse<>(false, "Đăng nhập thất bại: " + e.getMessage(), null);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);        }
     }
-    @PostMapping("/verify-token")
-    public ResponseEntity<String> verifyToken(@RequestHeader("Authorization") String token) {
-        // Kiểm tra và xác thực token
-        if (isValidToken(token)) {
-            return ResponseEntity.ok("Token hợp lệ");
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token không hợp lệ");
-        }
-    }
 
-    private boolean isValidToken(String token) {
-        // Logic kiểm tra token
-        return true; // Ví dụ, bạn có thể thêm logic kiểm tra token JWT
-    }
 
 
 }

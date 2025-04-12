@@ -2,6 +2,7 @@ package org.example.carpooling.Repository;
 
 import org.example.carpooling.Dto.RideRequestDTO;
 import org.example.carpooling.Entity.Rides;
+import org.example.carpooling.Entity.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -19,4 +20,7 @@ public interface RideRepository extends JpaRepository<Rides, Long> {
     Rides findDetailRideById(Long rideId);
 
     Rides findCancelRideById(Long rideId);
+
+    Rides findRideById(Long rideId);
+
 }

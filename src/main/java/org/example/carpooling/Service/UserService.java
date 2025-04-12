@@ -19,4 +19,6 @@ public interface UserService {
     List<?> getUsersByRole(String roleName);
     boolean rejectUser(Long id,String rejectionReason);
     boolean approvedUser(Long id);
+    DriverDTO getUserDetails(Long id);
+    Boolean deleteUser(Long id);
 }

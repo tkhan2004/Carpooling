@@ -22,4 +22,6 @@ public interface UserRepository extends JpaRepository<Users, Long> {
     List<Users> findAllByRole(@Param("roleName") String roleName);
 
     Optional<Users> findUsersById(Long id);
+    void deleteUserById(Long id);
+
 }

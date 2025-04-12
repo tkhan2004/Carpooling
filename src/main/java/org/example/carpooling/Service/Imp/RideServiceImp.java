@@ -1,21 +1,20 @@
 package org.example.carpooling.Service.Imp;
 
 import org.example.carpooling.Dto.RideRequestDTO;
+import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Rides;
+import org.example.carpooling.Entity.Status.BookingStatus;
 import org.example.carpooling.Entity.Status.RideStatus;
 import org.example.carpooling.Entity.Users;
+import org.example.carpooling.Repository.BookingRepository;
 import org.example.carpooling.Repository.RideRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.RideService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +23,11 @@ import java.util.stream.Collectors;
 @Service
 public class RideServiceImp implements RideService {
 
+    @Autowired
+    BookingRepository bookingRepository;
+    @Autowired
+    BookingServiceImp bookingServiceImp;
+
     private final UserRepository userRepository;
     private final RideRepository rideRepository;
 
@@ -31,6 +35,7 @@ public class RideServiceImp implements RideService {
     public RideServiceImp(UserRepository userRepository, RideRepository rideRepository) {
         this.userRepository = userRepository;
         this.rideRepository = rideRepository;
+
     }
 
     @Override
@@ -145,6 +150,7 @@ public class RideServiceImp implements RideService {
 
         return dto;
     }
+
 
 }
 

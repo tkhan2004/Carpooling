@@ -140,7 +140,7 @@ public class Users {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-    @OneToMany(mappedBy = "pasenger", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "passenger", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookings = new ArrayList<>();
 
     public DriverStatus getStatus() {

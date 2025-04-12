@@ -36,6 +36,10 @@ public class UserServiceImp implements UserService {
     @Autowired
     RoleRepository roleRepository;
 
+    @Autowired
+    FileServiceImp fileServiceImp;
+
+
     @Override
     public Users passengerRegister(RegisterRequest request,
                                    MultipartFile avatarImage) {
@@ -50,7 +54,10 @@ public class UserServiceImp implements UserService {
         }
 
         if (avatarImage != null && !avatarImage.isEmpty()) {
-            user.setAvatarImage(saveImage(avatarImage, "avatar", user));
+            String savedAvatar = fileServiceImp.saveFile(avatarImage);
+            if (savedAvatar != null) {
+                user.setAvatarImage(savedAvatar);
+            }
         }
         // Lấy role từ DB
         Role driverRole = roleRepository.findById(3L)
@@ -76,15 +83,25 @@ public class UserServiceImp implements UserService {
         user.setPhone(request.getPhone());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        // Handle file uploads
         if (avatarImage != null && !avatarImage.isEmpty()) {
-            user.setAvatarImage(saveImage(avatarImage, "avatar", user));
+            String savedAvatar = fileServiceImp.saveFile(avatarImage);
+            if (savedAvatar != null) {
+                user.setAvatarImage(savedAvatar);
+            }
         }
+
         if (licenseImage != null && !licenseImage.isEmpty()) {
-            user.setLicenseImageUrl(saveImage(licenseImage, "License", user));
+            String savedLicense = fileServiceImp.saveFile(licenseImage);
+            if (savedLicense != null) {
+                user.setLicenseImageUrl(savedLicense);
+            }
         }
+
         if (vehicleImage != null && !vehicleImage.isEmpty()) {
-            user.setVehicleImageUrl(saveImage(vehicleImage, "Vehicle", user));
+            String savedVehicle = fileServiceImp.saveFile(vehicleImage);
+            if (savedVehicle != null) {
+                user.setVehicleImageUrl(savedVehicle);
+            }
         }
 
         // Set driver role
@@ -168,13 +185,7 @@ public class UserServiceImp implements UserService {
                                     user.getStatus()
                             );
                         case "PASSENGER":
-                            return new UserDTO(
-                                    user.getId(),
-                                    user.getFullName(),
-                                    user.getEmail(),
-                                    user.getPhone(),
-                                    user.getRole().getName()
-                            );
+                            return new UserDTO(user, fileServiceImp); // 👈 constructor mới
                         default:
                             throw new IllegalArgumentException("Unknown role: " + role);
                     }
@@ -201,6 +212,33 @@ public class UserServiceImp implements UserService {
         user.setStatus(DriverStatus.APPROVED);
         user.setRejectionReason(null);
         userRepository.save(user);
+        return true;
+    }
+
+    @Override
+    public DriverDTO getUserDetails(Long id) {
+        Optional<Users> optionalUser = userRepository.findUsersById(id);
+        if (optionalUser.isEmpty()) {return null;}
+        Users user = optionalUser.get();
+        return new DriverDTO(
+                user.getId(),
+                user.getStatus(),
+                fileServiceImp.generateFileUrl(user.getLicenseImageUrl()),
+                fileServiceImp.generateFileUrl(user.getVehicleImageUrl()),
+                fileServiceImp.generateFileUrl(user.getAvatarImage()),
+                user.getFullName(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getRole().getName()
+        );
+    }
+
+    @Override
+    public Boolean deleteUser(Long id) {
+        Optional<Users> optionalUser = userRepository.findUsersById(id);
+        if (optionalUser.isEmpty()) {return false;}
+        Users user = optionalUser.get();
+        userRepository.delete(user);
         return true;
     }
 

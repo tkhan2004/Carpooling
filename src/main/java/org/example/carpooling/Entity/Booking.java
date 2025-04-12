@@ -2,28 +2,34 @@ package org.example.carpooling.Entity;
 
 import jakarta.persistence.*;
 import org.example.carpooling.Entity.Status.BookingStatus;
+import org.example.carpooling.Entity.Status.DriverStatus;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name="bookings")
+@Table(name = "bookings")
 public class Booking {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // map với Rides
     @ManyToOne
-    @JoinColumn(name="ride_id",nullable = false )
+    @JoinColumn(name = "ride_id", nullable = false)
     private Rides rides;
 
-    // map với users
     @ManyToOne
-    @JoinColumn(name="passenger_id",nullable = false )
-    private Users pasenger;
+    @JoinColumn(name = "passenger_id", nullable = false)
+    private Users passenger;
 
     private int seatsBooked;
 
+    @Enumerated(EnumType.STRING)
+    private BookingStatus status = BookingStatus.PENDING;
+
+    private LocalDateTime createdAt;
+
+    // Getter & Setter
     public Long getId() {
         return id;
     }
@@ -40,12 +46,12 @@ public class Booking {
         this.rides = rides;
     }
 
-    public Users getPasenger() {
-        return pasenger;
+    public Users getPassenger() {
+        return passenger;
     }
 
-    public void setPasenger(Users pasenger) {
-        this.pasenger = pasenger;
+    public void setPassenger(Users passenger) {
+        this.passenger = passenger;
     }
 
     public int getSeatsBooked() {
@@ -71,11 +77,4 @@ public class Booking {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
-    @Enumerated(EnumType.STRING)
-    private BookingStatus status = BookingStatus.PENDING;
-
-    private LocalDateTime createdAt;
-
-
 }

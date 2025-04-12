@@ -14,7 +14,7 @@ public class JwtUtil {
     @Value("${spring.jwt.secret}")
     private String secretKeyBase64;
 
-    private final long EXPIRATION_TIME = 36000; // 1 tiếng
+    private final long EXPIRATION_TIME = 3600000L; // 1 tiếng
 
     private byte[] getSecretKey() {
         return Base64.getDecoder().decode(secretKeyBase64);

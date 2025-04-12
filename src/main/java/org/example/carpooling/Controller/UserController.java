@@ -63,7 +63,7 @@ public class UserController
         userUpdateDTO.setFullName(fullName);
         userUpdateDTO.setPhone(phone);
 
-        if (user.getRole().getName().equals("DRIVER")) {
+        if (user.getRole() != null && "DRIVER".equalsIgnoreCase(user.getRole().getName())) {
             userUpdateDTO.setAvatarImage(avatarImage);
             userUpdateDTO.setLicenseImageUrl(licenseImage);
             userUpdateDTO.setVehicleImageUrl(vehicleImage);

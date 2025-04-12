@@ -22,8 +22,6 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-
-
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -63,5 +61,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        System.out.println("🔎 shouldNotFilter path: " + path);  // Log để debug
+        return path.startsWith("/api/file/") || path.startsWith("/api/auth/");
     }
 }
