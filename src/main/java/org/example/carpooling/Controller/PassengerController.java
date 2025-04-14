@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -69,6 +70,15 @@ public class PassengerController {
         bookingService.passengerConfirm(rideId, username);
 
         return ResponseEntity.ok(new ApiResponse<>(true, "Hành khách đã xác nhận hoàn thành", null));
+    }
+
+    @GetMapping("/passenger/bookings")
+    @PreAuthorize("hasRole('PASSENGER')")
+    public ResponseEntity<ApiResponse<List<BookingDTO>>> getDriverBookings(HttpServletRequest request) {
+        String token = jwtUtil.extractTokenFromRequest(request);
+        String driverEmail = jwtUtil.extractUsername(token);
+        List<BookingDTO> bookings = bookingService.getBookingsForDriver(driverEmail);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Danh sách bookings của khách hàng", bookings));
     }
 
 }

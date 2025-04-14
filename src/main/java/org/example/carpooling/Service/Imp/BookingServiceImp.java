@@ -141,4 +141,18 @@ public class BookingServiceImp implements BookingService {
 
         return bookings.stream().map(BookingDTO::new).collect(Collectors.toList());
     }
+
+    @Override
+    public List<BookingDTO> getBookingsForPassenger(String email) {
+        Users driver = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Driver not found"));
+
+        // Lấy danh sách tất cả ride của driver đó
+        List<Rides> rides = rideRepository.findByDriver_Email(email);
+
+        // Lấy tất cả booking thuộc những ride đó
+        List<Booking> bookings = bookingRepository.findAllByRidesIn(rides);
+
+        return bookings.stream().map(BookingDTO::new).collect(Collectors.toList());
+    }
 }

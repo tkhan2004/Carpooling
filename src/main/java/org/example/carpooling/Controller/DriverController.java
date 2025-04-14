@@ -41,7 +41,7 @@ public class DriverController {
     BookingRepository bookingReposioty;
 
     @Autowired
-    BookingServiceImp bookingServiceImp;
+    BookingService bookingService;
 
 
 
@@ -83,7 +83,7 @@ public class DriverController {
     public ResponseEntity<ApiResponse<List<BookingDTO>>> getDriverBookings(HttpServletRequest request) {
         String token = jwtUtil.extractTokenFromRequest(request);
         String driverEmail = jwtUtil.extractUsername(token);
-        List<BookingDTO> bookings = bookingServiceImp.getBookingsForDriver(driverEmail);
+        List<BookingDTO> bookings = bookingService.getBookingsForDriver(driverEmail);
         return ResponseEntity.ok(new ApiResponse<>(true, "Danh sách bookings của tài xế", bookings));
     }
 
@@ -91,7 +91,7 @@ public class DriverController {
     @PutMapping("/accept/{bookingId}")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<String>> driverAcceptBooking(@PathVariable Long bookingId) {
-        bookingServiceImp.driverAcceptBooking(bookingId);
+        bookingService.driverAcceptBooking(bookingId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Đã chấp nhận hành khách", null));
     }
 
@@ -100,9 +100,10 @@ public class DriverController {
     @PutMapping("/complete/{rideId}")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<String>> driverMarkCompleted(@PathVariable Long rideId) {
-        bookingServiceImp.driverMarkCompleted(rideId);
+        bookingService.driverMarkCompleted(rideId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Tài xế đã hoàn thành chuyến đi", null));
     }
+
 
 
 }

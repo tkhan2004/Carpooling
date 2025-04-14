@@ -4,6 +4,7 @@ import org.example.carpooling.Dto.RideRequestDTO;
 import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Rides;
 import org.example.carpooling.Entity.Status.BookingStatus;
+import org.example.carpooling.Entity.Status.DriverStatus;
 import org.example.carpooling.Entity.Status.RideStatus;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Repository.BookingRepository;
@@ -19,6 +20,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static org.example.carpooling.Entity.Status.DriverStatus.PENDING;
 
 @Service
 public class RideServiceImp implements RideService {
@@ -39,19 +42,18 @@ public class RideServiceImp implements RideService {
     }
 
     @Override
-    public ResponseEntity<?> createRide(RideRequestDTO rideRequest, String email) {
-        // Kiểm tra tài xế có tồn tại không
-        Optional<Users> optionalUser = userRepository.findByEmail(email);
-        if (optionalUser.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy tài xế");
-        }
+    public void createRide(RideRequestDTO rideRequest, String email) {
+        Users driver = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài xế"));
 
-        Users driver = optionalUser.get();
         if (!driver.getRole().getName().equals("DRIVER")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ tài xế mới có thể tạo chuyến đi");
+            throw new RuntimeException("Chỉ tài xế mới có thể tạo chuyến đi");
         }
 
-        // Tạo chuyến đi mới
+        if (driver.getStatus() == DriverStatus.PENDING || driver.getStatus() == DriverStatus.REJECTED) {
+            throw new RuntimeException("Tài xế chưa được duyệt");
+        }
+
         Rides ride = new Rides();
         ride.setDriver(driver);
         ride.setDeparture(rideRequest.getDeparture());
@@ -61,10 +63,7 @@ public class RideServiceImp implements RideService {
         ride.setAvailable_seats(rideRequest.getTotalSeat());
         ride.setTotal_seats(rideRequest.getTotalSeat());
 
-        // Lưu vào database
         rideRepository.save(ride);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body("Tạo chuyến đi thành công");
     }
 
 
@@ -151,6 +150,27 @@ public class RideServiceImp implements RideService {
         return dto;
     }
 
+    @Override
+    public RideRequestDTO updateRide(Long rideId, RideRequestDTO rideRequest, String email) {
+        Rides ride = rideRepository.findDetailRideById(rideId);
+        ride.setAvailable_seats(rideRequest.getAvailableSeats());
+        ride.setDeparture(rideRequest.getDeparture());
+        ride.setDestination(rideRequest.getDestination());
+        ride.setStart_time(rideRequest.getStartTime());
+        ride.setPrice_per_seat(rideRequest.getPricePerSeat());
+        ride.setTotal_seats(rideRequest.getTotalSeat());
+        rideRepository.save(ride);
 
+        RideRequestDTO dto = new RideRequestDTO(ride.getId(),
+                ride.getAvailable_seats(),
+                ride.getDriver().getFullName(),
+                ride.getDriver().getEmail(),
+                ride.getDeparture(),
+                ride.getDestination(),
+                ride.getStart_time(),
+                ride.getPrice_per_seat(),
+                ride.getTotal_seats(),
+                ride.getStatus());
+        return dto;
+    }
 }
-

@@ -10,4 +10,6 @@ public interface BookingService {
     public void driverMarkCompleted(Long rideId );
     void driverAcceptBooking(Long bookingId);
     public List<BookingDTO> getBookingsForDriver(String driverEmail);
+    public List<BookingDTO> getBookingsForPassenger(String passengerEmail);
+
 }

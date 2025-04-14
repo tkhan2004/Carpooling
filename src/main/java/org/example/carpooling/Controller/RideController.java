@@ -26,11 +26,14 @@ public class RideController {
     @PostMapping
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<Object>> createRide(@Valid @RequestBody RideRequestDTO rideRequest, HttpServletRequest request) {
-        String token = jwtUtil.extractTokenFromRequest(request);
-        String email = jwtUtil.extractUsername(token);
-        rideService.createRide(rideRequest, email);
-        ApiResponse<Object> response = new ApiResponse<>(true, "Tạo chuyến đi thành công", HttpStatus.OK);
-        return  ResponseEntity.status(HttpStatus.OK).body(response);
+        try {
+            String token = jwtUtil.extractTokenFromRequest(request);
+            String email = jwtUtil.extractUsername(token);
+            rideService.createRide(rideRequest, email);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, "Tạo chuyến đi thành công", null));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, ex.getMessage(), null));
+        }
     }
 
 
@@ -66,6 +69,7 @@ public class RideController {
         return ResponseEntity.ok(response);
     }
 
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<?>> deleteRide(@PathVariable Long id, HttpServletRequest request) {
@@ -75,4 +79,18 @@ public class RideController {
         ApiResponse<RideRequestDTO> response = new ApiResponse<>(true,"Huỷ bỏ chuyến đi thành công",ride);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
-}
+
+    @PutMapping("/update/{id}")
+    @PreAuthorize("hasAnyRole('DRIVER')")
+    public ResponseEntity<ApiResponse<?>> updateRide(@PathVariable Long id, @RequestBody RideRequestDTO rideRequest, HttpServletRequest request) {
+        try {
+        String token = jwtUtil.extractTokenFromRequest(request);
+        String email = jwtUtil.extractUsername(token);
+        RideRequestDTO ride = rideService.updateRide(id, rideRequest,email);
+        ApiResponse<RideRequestDTO> response = new ApiResponse<>(true, "Cập nhật chuyến đi thành công",ride);
+        return ResponseEntity.status(HttpStatus.OK).body(response);}
+        catch (RuntimeException ex) {
+            ApiResponse<RideRequestDTO> response = new ApiResponse<>(false, "Cập nhật chuyến đi thất bại",null);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);}
+        }
+    }
