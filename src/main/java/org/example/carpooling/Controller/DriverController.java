@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.example.carpooling.Dto.BookingDTO;
 import org.example.carpooling.Dto.RideRequestDTO;
 import org.example.carpooling.Dto.UserDTO;
+import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Payload.ApiResponse;
@@ -12,6 +13,7 @@ import org.example.carpooling.Repository.RideRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.BookingService;
 import org.example.carpooling.Service.Imp.BookingServiceImp;
+import org.example.carpooling.Service.NotificationService;
 import org.example.carpooling.Service.RideService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -38,12 +40,13 @@ public class DriverController {
     RideService rideService;
 
     @Autowired
-    BookingRepository bookingReposioty;
+    BookingRepository bookingRepository;
 
     @Autowired
     BookingService bookingService;
-
-
+    
+    @Autowired
+    NotificationService notificationService;
 
     @GetMapping("/profile")
     @PreAuthorize("hasAnyRole('DRIVER')")
@@ -78,7 +81,7 @@ public class DriverController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/driver/bookings")
+    @GetMapping("/bookings")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<List<BookingDTO>>> getDriverBookings(HttpServletRequest request) {
         String token = jwtUtil.extractTokenFromRequest(request);
@@ -91,8 +94,29 @@ public class DriverController {
     @PutMapping("/accept/{bookingId}")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<String>> driverAcceptBooking(@PathVariable Long bookingId) {
-        bookingService.driverAcceptBooking(bookingId);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Đã chấp nhận hành khách", null));
+        // Lấy thông tin booking trước khi xử lý
+        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            
+            // Chấp nhận booking
+            bookingService.driverAcceptBooking(bookingId);
+            
+            // Gửi thông báo cho hành khách
+            notificationService.sendNotification(
+                booking.getPassenger().getEmail(),
+                "Tài xế đã chấp nhận chuyến đi",
+                "Tài xế " + booking.getRides().getDriver().getFullName() + " đã chấp nhận chuyến đi của bạn từ " 
+                    + booking.getRides().getDeparture() + " đến " + booking.getRides().getDestination(),
+                "BOOKING_ACCEPTED",
+                bookingId
+            );
+            
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã chấp nhận hành khách", null));
+        }
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ApiResponse<>(false, "Không tìm thấy booking", null));
     }
 
 
@@ -100,7 +124,23 @@ public class DriverController {
     @PutMapping("/complete/{rideId}")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<String>> driverMarkCompleted(@PathVariable Long rideId) {
+        // Lấy thông tin các booking của chuyến đi
+        List<Booking> bookings = bookingRepository.findByRidesId(rideId);
+        
+        // Đánh dấu chuyến đi đã hoàn thành
         bookingService.driverMarkCompleted(rideId);
+        
+        // Gửi thông báo cho tất cả hành khách
+        for (Booking booking : bookings) {
+            notificationService.sendNotification(
+                booking.getPassenger().getEmail(),
+                "Chuyến đi đã hoàn thành",
+                "Tài xế đã xác nhận hoàn thành chuyến đi. Vui lòng xác nhận từ phía bạn để hoàn tất.",
+                "RIDE_COMPLETED",
+                booking.getId()
+            );
+        }
+        
         return ResponseEntity.ok(new ApiResponse<>(true, "Tài xế đã hoàn thành chuyến đi", null));
     }
 

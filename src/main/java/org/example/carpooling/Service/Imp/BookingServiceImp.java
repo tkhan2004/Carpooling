@@ -68,21 +68,29 @@ public class BookingServiceImp implements BookingService {
     // Khách xác nhận thành công
     @Override
     public BookingDTO passengerConfirm(Long rideId, String email) {
-        Users passenger = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Không tìm thấy hành khách"));
-        Booking booking = bookingRepository
-                .findByRides_IdAndPassenger_Id(rideId, passenger.getId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy booking"));
+        Users passenger = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hành khách"));
+
+        // Truy vấn danh sách booking phù hợp
+        List<Booking> bookings = bookingRepository.findByRides_IdAndPassenger_Id(rideId, passenger.getId());
+
+        if (bookings.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy booking cho hành khách này");
+        }
+
+        // Giả sử chỉ lấy booking đầu tiên (nếu bạn đã giới hạn 1 người chỉ được book 1 lần)
+        Booking booking = bookings.get(0);
 
         booking.setStatus(BookingStatus.PASSENGER_CONFIRMED);
         bookingRepository.save(booking);
 
-        // Nếu tài xế cũng đã xác nhận:
+        // Nếu tài xế đã xác nhận → cập nhật Ride thành COMPLETED
         if (booking.getRides().getStatus() == RideStatus.DRIVER_CONFIRMED) {
             booking.getRides().setStatus(RideStatus.COMPLETED);
             rideRepository.save(booking.getRides());
         }
 
-        return new BookingDTO(booking); // hoặc convert tùy bạn
+        return new BookingDTO(booking);
     }
 
     //Tài xế xác nhận thành công
@@ -154,5 +162,33 @@ public class BookingServiceImp implements BookingService {
         List<Booking> bookings = bookingRepository.findAllByRidesIn(rides);
 
         return bookings.stream().map(BookingDTO::new).collect(Collectors.toList());
+    }
+
+    @Override
+    public BookingDTO cancleBookings(Long rideId, String email) {
+        Users passenger = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hành khách"));
+
+        // Truy vấn danh sách booking phù hợp
+        List<Booking> bookings = bookingRepository.findByRides_IdAndPassenger_Id(rideId, passenger.getId());
+
+        if (bookings.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy booking cho hành khách này");
+        }
+
+        // Giả sử chỉ lấy booking đầu tiên (nếu bạn đã giới hạn 1 người chỉ được book 1 lần)
+        Booking booking = bookings.get(0);
+
+        booking.setStatus(BookingStatus.PASSENGER_CONFIRMED);
+        bookingRepository.save(booking);
+
+        // Nếu tài xế đã xác nhận → cập nhật Ride thành COMPLETED
+        if (booking.getRides().getStatus() == RideStatus.DRIVER_CONFIRMED) {
+            booking.getRides().setStatus(RideStatus.COMPLETED);
+            rideRepository.save(booking.getRides());
+        }
+
+        return new BookingDTO(booking);
+
     }
 }

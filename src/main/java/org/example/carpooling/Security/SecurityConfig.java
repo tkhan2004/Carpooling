@@ -57,7 +57,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // Enable CORS using the CorsConfigurationSource bean defined below
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // <-- ADD THIS LINE FOR CORS
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
@@ -85,16 +84,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // IMPORTANT: Specify the exact origin of your frontend
-        configuration.setAllowedOrigins(Arrays.asList("http://127.0.0.1:5500", "http://localhost:5500")); // Allow VScode Live Server
+        configuration.setAllowedOrigins(Arrays.asList("http://127.0.0.1:5500","http://127.0.0.1:5502", "http://localhost:5500","http://localhost:60468","http://localhost:63342"));
         // Specify allowed methods (including OPTIONS for preflight)
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        // Specify allowed headers (Authorization is crucial for JWT)
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With"));
-        // Allow credentials (needed for Authorization header)
-        configuration.setAllowCredentials(true);
-        // You can also expose headers if your frontend needs to read them
-        // configuration.setExposedHeaders(Arrays.asList("Custom-Header1"));
-
+        // Dòng này quan trọng - thay đổi thành false
+        configuration.setAllowCredentials(false);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         // Apply this configuration to all paths - you can restrict it if needed e.g., "/api/**"
         source.registerCorsConfiguration("/**", configuration);

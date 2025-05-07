@@ -11,5 +11,6 @@ public interface BookingService {
     void driverAcceptBooking(Long bookingId);
     public List<BookingDTO> getBookingsForDriver(String driverEmail);
     public List<BookingDTO> getBookingsForPassenger(String passengerEmail);
+    public BookingDTO cancleBookings(Long rideId, String email);
 
 }

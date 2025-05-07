@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -172,5 +173,24 @@ public class RideServiceImp implements RideService {
                 ride.getTotal_seats(),
                 ride.getStatus());
         return dto;
+    }
+
+    @Override
+    public List<RideRequestDTO> searchRides(String departure, String destination, LocalDate startTime, Integer seats) {
+        List<Rides> rides = rideRepository.searchRides(departure, destination, startTime, seats);
+        return rides.stream()
+                .map(ride -> new RideRequestDTO(
+                        ride.getId(),
+                        ride.getAvailable_seats(),
+                        ride.getDriver().getFullName(),
+                        ride.getDriver().getEmail(),
+                        ride.getDeparture(),
+                        ride.getDestination(),
+                        ride.getStart_time(),
+                        ride.getPrice_per_seat(),
+                        ride.getTotal_seats(),
+                        ride.getStatus()
+                ))
+                .collect(Collectors.toList());
     }
 }

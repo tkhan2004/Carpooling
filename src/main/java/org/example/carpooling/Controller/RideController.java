@@ -6,12 +6,14 @@ import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Payload.ApiResponse;
 import org.example.carpooling.Service.RideService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -22,6 +24,17 @@ public class RideController {
 
     @Autowired
     private RideService rideService;
+
+    @GetMapping("/search")
+    @PreAuthorize("hasRole('PASSENGER')")
+    public ResponseEntity<ApiResponse<List<RideRequestDTO>>> searchRides(
+            @RequestParam(required = false) String departure,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startTime,
+            @RequestParam(required = false) Integer seats){
+        List<RideRequestDTO> resultDTO = rideService.searchRides(departure, destination, startTime, seats);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Tìm chuyến đi thành công",resultDTO));
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('DRIVER')")
@@ -38,7 +51,7 @@ public class RideController {
 
 
     @GetMapping("/available")
-    @PreAuthorize("hasRole('PASSENGER')")
+//    @PreAuthorize("hasAnyRole('PASSENGER','ADMIN')")
     public  ResponseEntity<ApiResponse<List<RideRequestDTO>>> getAllRideActive() {
         List<RideRequestDTO> rides = rideService.getAllRideActive();
         ApiResponse<List<RideRequestDTO>> response = (new ApiResponse<>(true,  "success", rides));
@@ -94,3 +107,5 @@ public class RideController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);}
         }
     }
+
+

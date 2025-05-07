@@ -6,6 +6,8 @@ import org.example.carpooling.Entity.Users;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +15,12 @@ import java.util.Optional;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking,Long> {
 
-    Optional<Booking> findByRides_IdAndPassenger_Id(Long rideId, Long passengerId);
+    List<Booking> findByRides_IdAndPassenger_Id(Long rideId, Long passengerId);
     List<Booking> findAllByRidesIn(List<Rides> rides);
+    
+    // Tìm booking theo ride ID và email của hành khách
+    Optional<Booking> findByRidesIdAndPassengerEmail(Long rideId, String passengerEmail);
+    
+    // Tìm tất cả booking của một chuyến đi
+    List<Booking> findByRidesId(Long rideId);
 }

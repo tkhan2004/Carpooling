@@ -166,5 +166,16 @@ public class Users {
     @Column(columnDefinition = "TEXT")
     private String rejectionReason;
 
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    @Column(length = 1000)
+    private String refreshToken;
+
 
 }
