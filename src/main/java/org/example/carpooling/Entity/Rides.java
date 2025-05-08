@@ -5,12 +5,11 @@ import org.example.carpooling.Entity.Status.RideStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name="rides")
+@Table(name = "rides")
 public class Rides {
 
     @Id
@@ -18,19 +17,34 @@ public class Rides {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name="driver_id" , nullable = false)
+    @JoinColumn(name = "driver_id", nullable = false)
     private Users driver;
 
     private String departure;
     private String destination;
 
-    public LocalDateTime getStart_time() {
-        return start_time;
-    }
+    @Column(name = "start_time")
+    private LocalDateTime startTime;
 
-    public void setStart_time(LocalDateTime start_time) {
-        this.start_time = start_time;
-    }
+    @Column(name = "price_per_seat")
+    private BigDecimal pricePerSeat;
+
+    @Column(name = "total_seats")
+    private int totalSeats;
+
+    @Column(name = "available_seats")
+    private int availableSeats;
+
+    @Enumerated(EnumType.STRING)
+    private RideStatus status = RideStatus.ACTIVE;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "rides")
+    private List<Booking> bookings = new ArrayList<>();
+
+    // GETTERS & SETTERS
 
     public Long getId() {
         return id;
@@ -64,28 +78,36 @@ public class Rides {
         this.destination = destination;
     }
 
-    public BigDecimal getPrice_per_seat() {
-        return price_per_seat;
+    public LocalDateTime getStartTime() {
+        return startTime;
     }
 
-    public void setPrice_per_seat(BigDecimal price_per_seat) {
-        this.price_per_seat = price_per_seat;
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
     }
 
-    public int getTotal_seats() {
-        return total_seats;
+    public BigDecimal getPricePerSeat() {
+        return pricePerSeat;
     }
 
-    public void setTotal_seats(int total_seats) {
-        this.total_seats = total_seats;
+    public void setPricePerSeat(BigDecimal pricePerSeat) {
+        this.pricePerSeat = pricePerSeat;
     }
 
-    public int getAvailable_seats() {
-        return available_seats;
+    public int getTotalSeats() {
+        return totalSeats;
     }
 
-    public void setAvailable_seats(int available_seats) {
-        this.available_seats = available_seats;
+    public void setTotalSeats(int totalSeats) {
+        this.totalSeats = totalSeats;
+    }
+
+    public int getAvailableSeats() {
+        return availableSeats;
+    }
+
+    public void setAvailableSeats(int availableSeats) {
+        this.availableSeats = availableSeats;
     }
 
     public RideStatus getStatus() {
@@ -96,12 +118,12 @@ public class Rides {
         this.status = status;
     }
 
-    public LocalDateTime getCreated_at() {
-        return created_at;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreated_at(LocalDateTime created_at) {
-        this.created_at = created_at;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public List<Booking> getBookings() {
@@ -111,18 +133,4 @@ public class Rides {
     public void setBookings(List<Booking> bookings) {
         this.bookings = bookings;
     }
-
-    private LocalDateTime start_time;
-
-    private BigDecimal price_per_seat;
-    private int total_seats;
-    private int available_seats;
-
-    @Enumerated(EnumType.STRING)
-    private RideStatus status = RideStatus.ACTIVE;
-    private LocalDateTime created_at = LocalDateTime.now();
-
-    @OneToMany(mappedBy = "rides")
-    private List<Booking> bookings = new ArrayList<>();
-
 }

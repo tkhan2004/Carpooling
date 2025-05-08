@@ -45,7 +45,7 @@ public class BookingServiceImp implements BookingService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chuyến đi"));
 
         // 3. Kiểm tra xem có còn đủ ghế không
-        if (seats > ride.getAvailable_seats()) {
+        if (seats > ride.getAvailableSeats()) {
             throw new RuntimeException("Không đủ ghế trống cho chuyến đi này");
         }
 
@@ -123,12 +123,12 @@ public class BookingServiceImp implements BookingService {
 
         // Trừ ghế
         Rides ride = booking.getRides();
-        int remainingSeats = ride.getAvailable_seats() - booking.getSeatsBooked();
+        int remainingSeats = ride.getAvailableSeats() - booking.getSeatsBooked();
         if (remainingSeats < 0) {
             throw new RuntimeException("Không đủ ghế trống để duyệt booking này");
         }
 
-        ride.setAvailable_seats(remainingSeats);
+        ride.setAvailableSeats(remainingSeats);
         rideRepository.save(ride); // nhớ lưu lại ride
 
         // Cập nhật trạng thái booking
@@ -178,6 +178,10 @@ public class BookingServiceImp implements BookingService {
 
         // Giả sử chỉ lấy booking đầu tiên (nếu bạn đã giới hạn 1 người chỉ được book 1 lần)
         Booking booking = bookings.get(0);
+        // Trả lại ghế cho chuyến đi
+        Rides ride = booking.getRides();
+        ride.setAvailableSeats(ride.getAvailableSeats() + booking.getSeatsBooked ());
+        rideRepository.save(ride);
 
         booking.setStatus(BookingStatus.PASSENGER_CONFIRMED);
         bookingRepository.save(booking);

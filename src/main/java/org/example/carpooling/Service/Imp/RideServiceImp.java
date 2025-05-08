@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +48,7 @@ public class RideServiceImp implements RideService {
         Users driver = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài xế"));
 
-        if (!driver.getRole().getName().equals("DRIVER")) {
+        if (!"DRIVER".equals(driver.getRole().getName())) {
             throw new RuntimeException("Chỉ tài xế mới có thể tạo chuyến đi");
         }
 
@@ -55,14 +56,27 @@ public class RideServiceImp implements RideService {
             throw new RuntimeException("Tài xế chưa được duyệt");
         }
 
+        LocalDateTime newStart = rideRequest.getStartTime();
+        LocalDateTime newEnd = newStart.plusHours(2); // giả sử chuyến kéo dài 2 giờ
+
+        List<Rides> existingRides = rideRepository.findByDriverAndStatus(driver, RideStatus.ACTIVE);
+        for (Rides ride : existingRides) {
+            LocalDateTime existingStart = ride.getStartTime();
+            LocalDateTime existingEnd = existingStart.plusHours(2);
+            boolean isOverlapping = newStart.isBefore(existingEnd) && existingStart.isBefore(newEnd);
+            if (isOverlapping) {
+                throw new RuntimeException("Tài xế đã có chuyến đi trùng giờ");
+            }
+        }
+
         Rides ride = new Rides();
         ride.setDriver(driver);
         ride.setDeparture(rideRequest.getDeparture());
         ride.setDestination(rideRequest.getDestination());
-        ride.setStart_time(rideRequest.getStartTime());
-        ride.setPrice_per_seat(rideRequest.getPricePerSeat());
-        ride.setAvailable_seats(rideRequest.getTotalSeat());
-        ride.setTotal_seats(rideRequest.getTotalSeat());
+        ride.setStartTime(newStart);
+        ride.setPricePerSeat(rideRequest.getPricePerSeat());
+        ride.setAvailableSeats(rideRequest.getTotalSeat());
+        ride.setTotalSeats(rideRequest.getTotalSeat());
 
         rideRepository.save(ride);
     }
@@ -87,14 +101,14 @@ public class RideServiceImp implements RideService {
         return rides.stream()
                 .map(ride -> new RideRequestDTO(
                         ride.getId(),
-                        ride.getAvailable_seats(), // Sửa thành camelCase
+                        ride.getAvailableSeats(), // Sửa thành camelCase
                         ride.getDriver().getFullName(),
                         ride.getDriver().getEmail(),
                         ride.getDeparture(),
                         ride.getDestination(),
-                        ride.getStart_time(), // Sửa thành camelCase
-                        ride.getPrice_per_seat(), // Sửa thành camelCase
-                        ride.getTotal_seats(), // Sửa thành camelCase
+                        ride.getStartTime(), // Sửa thành camelCase
+                        ride.getPricePerSeat(), // Sửa thành camelCase
+                        ride.getTotalSeats(), // Sửa thành camelCase
                         ride.getStatus()
                 ))
                 .collect(Collectors.toList());
@@ -107,14 +121,14 @@ public class RideServiceImp implements RideService {
         // Create DTO and set values using the constructor
         RideRequestDTO dto = new RideRequestDTO(
                 ride.getId(),
-                ride.getAvailable_seats(), // Ensure this is available in your Rides entity
+                ride.getAvailableSeats(), // Ensure this is available in your Rides entity
                 ride.getDriver().getFullName(),
                 ride.getDriver().getEmail(),
                 ride.getDeparture(),
                 ride.getDestination(),
-                ride.getStart_time(),
-                ride.getPrice_per_seat(),
-                ride.getTotal_seats(),
+                ride.getStartTime(),
+                ride.getPricePerSeat(),
+                ride.getTotalSeats(),
                 ride.getStatus()// Make sure you get the correct field here
         );
 
@@ -137,14 +151,14 @@ public class RideServiceImp implements RideService {
         // Cập nhật đối tượng DTO với các giá trị mới nhất từ entity Ride
         RideRequestDTO dto = new RideRequestDTO(
                 ride.getId(),
-                ride.getAvailable_seats(),  // Dùng 'availableSeats' thay vì 'available_seats'
+                ride.getAvailableSeats(),  // Dùng 'availableSeats' thay vì 'available_seats'
                 ride.getDriver().getFullName(),
                 ride.getDriver().getEmail(),
                 ride.getDeparture(),
                 ride.getDestination(),
-                ride.getStart_time(),  // Sửa lại 'getStart_time()' thành 'getStartTime()'
-                ride.getPrice_per_seat(),  // 'pricePerSeat' thay vì 'price_per_seat'
-                ride.getTotal_seats(),  // 'totalSeats' thay vì 'total_seats'
+                ride.getStartTime(),  // Sửa lại 'getStart_time()' thành 'getStartTime()'
+                ride.getPricePerSeat(),  // 'pricePerSeat' thay vì 'price_per_seat'
+                ride.getTotalSeats(),  // 'totalSeats' thay vì 'total_seats'
                 ride.getStatus()  // Trả về trạng thái của chuyến đi
         );
 
@@ -154,23 +168,23 @@ public class RideServiceImp implements RideService {
     @Override
     public RideRequestDTO updateRide(Long rideId, RideRequestDTO rideRequest, String email) {
         Rides ride = rideRepository.findDetailRideById(rideId);
-        ride.setAvailable_seats(rideRequest.getAvailableSeats());
+        ride.setAvailableSeats(rideRequest.getAvailableSeats());
         ride.setDeparture(rideRequest.getDeparture());
         ride.setDestination(rideRequest.getDestination());
-        ride.setStart_time(rideRequest.getStartTime());
-        ride.setPrice_per_seat(rideRequest.getPricePerSeat());
-        ride.setTotal_seats(rideRequest.getTotalSeat());
+        ride.setStartTime(rideRequest.getStartTime());
+        ride.setPricePerSeat(rideRequest.getPricePerSeat());
+        ride.setTotalSeats(rideRequest.getTotalSeat());
         rideRepository.save(ride);
 
         RideRequestDTO dto = new RideRequestDTO(ride.getId(),
-                ride.getAvailable_seats(),
+                ride.getAvailableSeats(),
                 ride.getDriver().getFullName(),
                 ride.getDriver().getEmail(),
                 ride.getDeparture(),
                 ride.getDestination(),
-                ride.getStart_time(),
-                ride.getPrice_per_seat(),
-                ride.getTotal_seats(),
+                ride.getStartTime(),
+                ride.getPricePerSeat(),
+                ride.getTotalSeats(),
                 ride.getStatus());
         return dto;
     }
@@ -181,14 +195,14 @@ public class RideServiceImp implements RideService {
         return rides.stream()
                 .map(ride -> new RideRequestDTO(
                         ride.getId(),
-                        ride.getAvailable_seats(),
+                        ride.getAvailableSeats(),
                         ride.getDriver().getFullName(),
                         ride.getDriver().getEmail(),
                         ride.getDeparture(),
                         ride.getDestination(),
-                        ride.getStart_time(),
-                        ride.getPrice_per_seat(),
-                        ride.getTotal_seats(),
+                        ride.getStartTime(),
+                        ride.getPricePerSeat(),
+                        ride.getTotalSeats(),
                         ride.getStatus()
                 ))
                 .collect(Collectors.toList());

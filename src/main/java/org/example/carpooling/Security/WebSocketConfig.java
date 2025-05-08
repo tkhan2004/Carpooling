@@ -15,7 +15,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")  // Cho phép mọi origin trong môi trường dev
                 .withSockJS();
-            
+
         // Thêm endpoint không sử dụng SockJS cho Postman
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*");

@@ -2,9 +2,11 @@ package org.example.carpooling.Controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.carpooling.Dto.BookingDTO;
+import org.example.carpooling.Dto.DriverDTO;
 import org.example.carpooling.Dto.RideRequestDTO;
 import org.example.carpooling.Dto.UserDTO;
 import org.example.carpooling.Entity.Booking;
+import org.example.carpooling.Entity.Status.BookingStatus;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Payload.ApiResponse;
@@ -15,6 +17,7 @@ import org.example.carpooling.Service.BookingService;
 import org.example.carpooling.Service.Imp.BookingServiceImp;
 import org.example.carpooling.Service.NotificationService;
 import org.example.carpooling.Service.RideService;
+import org.example.carpooling.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,6 +51,9 @@ public class DriverController {
     @Autowired
     NotificationService notificationService;
 
+    @Autowired
+    UserService userService;
+
     @GetMapping("/profile")
     @PreAuthorize("hasAnyRole('DRIVER')")
     public ResponseEntity<?> getProfile(HttpServletRequest request) {
@@ -56,17 +62,17 @@ public class DriverController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
         }
 
-        String username = jwtUtil.extractUsername(token);
-        Optional<Users> users =  userRepository.findByEmail(username);
-//        System.out.println("Extracted username from token: " + username);
-//        System.out.println("Tìm thấy user: " + users.isPresent());
-        if (!users.isPresent()) {
+        String email = jwtUtil.extractUsername(token);
+        Optional<Users> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
         }
 
-        Users user = users.get();
-        UserDTO userDTO = new UserDTO(user.getId(),user.getFullName(),user.getEmail(),user.getPhone(),user.getRole().getName());
-        return ResponseEntity.status(HttpStatus.OK).body(userDTO);
+        Users user = optionalUser.get();
+        DriverDTO driverDTO = userService.getUserDetails(user.getId());
+
+        return ResponseEntity.ok(driverDTO);
+
     }
 
 
@@ -119,6 +125,35 @@ public class DriverController {
             .body(new ApiResponse<>(false, "Không tìm thấy booking", null));
     }
 
+    @PutMapping("/reject/{bookingId}")
+    @PreAuthorize("hasRole('DRIVER')")
+    public ResponseEntity<ApiResponse<String>> driverRejectBooking(@PathVariable Long bookingId) {
+        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+
+        if (bookingOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, "Không tìm thấy booking", null));
+        }
+
+        Booking booking = bookingOpt.get();
+
+        // Cập nhật trạng thái booking
+        booking.setStatus(BookingStatus.REJECTED);
+        bookingRepository.save(booking);
+
+        // Gửi thông báo cho hành khách
+        notificationService.sendNotification(
+                booking.getPassenger().getEmail(),
+                "Tài xế đã từ chối chuyến đi",
+                "Rất tiếc, tài xế " + booking.getRides().getDriver().getFullName() +
+                        " đã từ chối chuyến đi từ " + booking.getRides().getDeparture() +
+                        " đến " + booking.getRides().getDestination(),
+                "BOOKING_REJECTED",
+                booking.getId()
+        );
+
+        return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối hành khách", null));
+    }
 
     // Xác nhận chuyến đi thành công
     @PutMapping("/complete/{rideId}")

@@ -8,6 +8,7 @@ import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.ChatMessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,16 +25,30 @@ public class ChatMessageServiceImp implements ChatMessageService {
     private UserRepository userRepository;
 
     @Override
+    @Transactional
     public ChatMessage save(ChatMessage chatMessage) {
+        // Kiểm tra và đảm bảo dữ liệu cần thiết đã được cung cấp
+        if (chatMessage.getSenderEmail() == null || chatMessage.getReceiverEmail() == null || 
+            chatMessage.getContent() == null || chatMessage.getRoomId() == null) {
+            throw new IllegalArgumentException("Missing required fields for chat message");
+        }
+        
+        // Đảm bảo timestamp được thiết lập
+        if (chatMessage.getTimestamp() == null) {
+            chatMessage.setTimestamp(java.time.LocalDateTime.now());
+        }
+        
         return chatMessageRepository.save(chatMessage);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ChatMessage> getMessagesByRoomId(String roomId) {
         return chatMessageRepository.findByRoomIdOrderByTimestampAsc(roomId);
     }
     
     @Override
+    @Transactional(readOnly = true)
     public List<ChatMessageDTO> getMessageDTOsByRoomId(String roomId) {
         List<ChatMessage> messages = chatMessageRepository.findByRoomIdOrderByTimestampAsc(roomId);
         
@@ -51,6 +66,7 @@ public class ChatMessageServiceImp implements ChatMessageService {
     }
     
     @Override
+    @Transactional
     public void markMessagesAsRead(String roomId, String userEmail) {
         chatMessageRepository.markMessagesAsRead(roomId, userEmail);
     }

@@ -19,13 +19,13 @@ public class ChatMessage {
     private String content;
     private String roomId;
     private LocalDateTime timestamp;
-    
+
     @Enumerated(EnumType.STRING)
     private MessageStatus status = MessageStatus.SENT;
-    
+
     @Column(name = "is_read")
     private boolean isRead = false;
-    
+
     // Enum for message status
     public enum MessageStatus {
         SENT,
@@ -42,7 +42,8 @@ public class ChatMessage {
         this.receiverEmail = messageDTO.getReceiverEmail();
         this.content = messageDTO.getContent();
         this.roomId = messageDTO.getRoomId();
-        this.timestamp = messageDTO.getTimestamp();
+        this.timestamp = messageDTO.getTimestamp() != null ? messageDTO.getTimestamp() : LocalDateTime.now();
+        this.isRead = messageDTO.isRead();
     }
 
     public ChatMessage(ChatMessage dto) {
@@ -103,19 +104,19 @@ public class ChatMessage {
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
-    
+
     public MessageStatus getStatus() {
         return status;
     }
-    
+
     public void setStatus(MessageStatus status) {
         this.status = status;
     }
-    
+
     public boolean isRead() {
         return isRead;
     }
-    
+
     public void setRead(boolean isRead) {
         this.isRead = isRead;
     }
