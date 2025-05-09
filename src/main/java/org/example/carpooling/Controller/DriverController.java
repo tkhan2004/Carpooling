@@ -54,6 +54,19 @@ public class DriverController {
     @Autowired
     UserService userService;
 
+    @GetMapping("/booking/{id}")
+    @PreAuthorize("hasRole('DRIVER')")
+    public ResponseEntity<ApiResponse<BookingDTO>> getBookingDetail(@PathVariable Long id) {
+        Optional<Booking> booking = bookingRepository.findById(id);
+        if (booking.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, "Không tìm thấy booking", null));
+        }
+
+        BookingDTO dto = new BookingDTO(booking.get());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Chi tiết booking", dto));
+    }
+
     @GetMapping("/profile")
     @PreAuthorize("hasAnyRole('DRIVER')")
     public ResponseEntity<?> getProfile(HttpServletRequest request) {

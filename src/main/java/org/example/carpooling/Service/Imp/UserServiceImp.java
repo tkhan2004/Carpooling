@@ -151,17 +151,30 @@ public class UserServiceImp implements UserService {
         user.setPhone(userUpdateDTO.getPhone());
 
         // ✅ Update avatar cho mọi user
-        if (userUpdateDTO.getAvatarImage() != null) {
-            saveImage(userUpdateDTO.getAvatarImage(), "avatar", user);
+        MultipartFile avatarFile = userUpdateDTO.getAvatarImage();
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            saveImage(avatarFile, "avatar", user);
         }
 
-        // ✅ Chỉ cho tài xế mới được upload ảnh license & vehicle
+        // ✅ Nếu là DRIVER thì update license & vehicle
         if (user.getRole().getName().equalsIgnoreCase("DRIVER")) {
-            if (userUpdateDTO.getLicenseImageUrl() != null) {
-                saveImage(userUpdateDTO.getLicenseImageUrl(), "license", user);
+            boolean updated = false;
+
+            MultipartFile licenseFile = userUpdateDTO.getLicenseImageUrl();
+            if (licenseFile != null && !licenseFile.isEmpty()) {
+                saveImage(licenseFile, "license", user);
+                updated = true;
             }
-            if (userUpdateDTO.getVehicleImageUrl() != null) {
-                saveImage(userUpdateDTO.getVehicleImageUrl(), "vehicle", user);
+
+            MultipartFile vehicleFile = userUpdateDTO.getVehicleImageUrl();
+            if (vehicleFile != null && !vehicleFile.isEmpty()) {
+                saveImage(vehicleFile, "vehicle", user);
+                updated = true;
+            }
+
+            // ✅ Nếu có cập nhật ảnh license/vehicle → cần duyệt lại
+            if (updated) {
+                user.setStatus(DriverStatus.PENDING);
             }
         }
 

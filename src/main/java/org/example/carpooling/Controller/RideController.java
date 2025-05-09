@@ -83,7 +83,7 @@ public class RideController {
     }
 
 
-    @PutMapping("/{id}")
+    @PutMapping("cancel/{id}")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<?>> deleteRide(@PathVariable Long id, HttpServletRequest request) {
         String token = jwtUtil.extractTokenFromRequest(request);

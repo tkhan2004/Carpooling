@@ -44,12 +44,21 @@ public class BookingServiceImp implements BookingService {
         Rides ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chuyến đi"));
 
-        // 3. Kiểm tra xem có còn đủ ghế không
+        // ⚠️ 3. Kiểm tra người dùng đã có booking chưa hoàn tất chưa
+        boolean alreadyBooked = bookingRepository.existsByPassengerAndRidesAndStatusIn(
+                passenger, ride, List.of(BookingStatus.PENDING, BookingStatus.ACCEPTED)
+        );
+
+        if (alreadyBooked) {
+            throw new RuntimeException("Bạn đã đặt chuyến này rồi và đang chờ hoặc đã được xác nhận.");
+        }
+
+        // 4. Kiểm tra ghế
         if (seats > ride.getAvailableSeats()) {
             throw new RuntimeException("Không đủ ghế trống cho chuyến đi này");
         }
 
-        // 4. Tạo booking mới với trạng thái PENDING
+        // 5. Tạo booking mới
         Booking booking = new Booking();
         booking.setRides(ride);
         booking.setPassenger(passenger);
@@ -57,10 +66,8 @@ public class BookingServiceImp implements BookingService {
         booking.setStatus(BookingStatus.PENDING);
         booking.setCreatedAt(LocalDateTime.now());
 
-        // 5. Lưu booking (chưa trừ ghế)
         bookingRepository.save(booking);
 
-        // 6. Trả về DTO
         return new BookingDTO(booking);
     }
 
@@ -152,15 +159,9 @@ public class BookingServiceImp implements BookingService {
 
     @Override
     public List<BookingDTO> getBookingsForPassenger(String email) {
-        Users driver = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
-
-        // Lấy danh sách tất cả ride của driver đó
-        List<Rides> rides = rideRepository.findByDriver_Email(email);
-
-        // Lấy tất cả booking thuộc những ride đó
-        List<Booking> bookings = bookingRepository.findAllByRidesIn(rides);
-
+        Users passenger = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Passenger not found"));
+        List<Booking> bookings = bookingRepository.findAllByPassenger(passenger);
         return bookings.stream().map(BookingDTO::new).collect(Collectors.toList());
     }
 

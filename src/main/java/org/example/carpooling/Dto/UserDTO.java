@@ -59,12 +59,13 @@ public class UserDTO {
         this.avatarUrl = avatarUrl;
     }
 
-    public UserDTO(Long id, String fullName, String email, String phoneNumber, String role) {
+    public UserDTO(Long id, String fullName, String email, String phoneNumber, String role,String avatarUrl) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.role = role;
+        this.avatarUrl = avatarUrl;
     }
     public UserDTO(Users user, FileService fileService) {
         this.id = user.getId();

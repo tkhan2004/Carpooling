@@ -10,6 +10,7 @@ import org.example.carpooling.Payload.ApiResponse;
 import org.example.carpooling.Repository.BookingRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.BookingService;
+import org.example.carpooling.Service.Imp.FileServiceImp;
 import org.example.carpooling.Service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -39,6 +40,9 @@ public class PassengerController {
     @Autowired
     NotificationService notificationService;
 
+    @Autowired
+    FileServiceImp fileServiceImp;
+
     @GetMapping("/profile")
     @PreAuthorize("hasRole('PASSENGER')")
     public ResponseEntity<ApiResponse<UserDTO>> getProfile(HttpServletRequest request) {
@@ -48,7 +52,7 @@ public class PassengerController {
         Optional<Users> users =  userRepository.findByEmail(username);
 
         Users user = users.get();
-        UserDTO userDTO = new UserDTO(user.getId(),user.getFullName(),user.getEmail(),user.getPhone(),user.getRole().getName());
+        UserDTO userDTO = new UserDTO(user, fileServiceImp); // ✅ dùng constructor đã xử lý avatarUrl đúng
         ApiResponse<UserDTO> response = new ApiResponse<>(true, "Thông tin người dùng",  userDTO);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -114,25 +118,37 @@ public class PassengerController {
 
     @GetMapping("/bookings")
     @PreAuthorize("hasRole('PASSENGER')")
-    // tái sử udngj driver booking
     public ResponseEntity<ApiResponse<List<BookingDTO>>> getPassengerBookings(HttpServletRequest request) {
         String token = jwtUtil.extractTokenFromRequest(request);
         String passengerEmail = jwtUtil.extractUsername(token);
-        List<BookingDTO> bookings = bookingService.getBookingsForDriver(passengerEmail);
+        List<BookingDTO> bookings = bookingService.getBookingsForPassenger(passengerEmail);
         return ResponseEntity.ok(new ApiResponse<>(true, "Danh sách bookings của khách hàng", bookings));
     }
 
-    @PutMapping("/cancel-bookings/{rideId}")
+    @GetMapping("/booking/{bookingId}")
     @PreAuthorize("hasRole('PASSENGER')")
-    public ResponseEntity<ApiResponse<BookingDTO>> cancelBooking(@PathVariable Long rideId, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<BookingDTO>> getBookingDetail(@PathVariable Long bookingId) {
+        Optional<Booking> booking = bookingRepository.findById(bookingId);
+        if (booking.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, "Không tìm thấy booking", null));
+        }
+
+        BookingDTO dto = new BookingDTO(booking.get());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Chi tiết booking", dto));
+    }
+
+    @PutMapping("/cancel-bookings/{bookingId}")
+    @PreAuthorize("hasRole('PASSENGER')")
+    public ResponseEntity<ApiResponse<BookingDTO>> cancelBooking(@PathVariable Long bookingId, HttpServletRequest request) {
         String token = jwtUtil.extractTokenFromRequest(request);
         String username = jwtUtil.extractUsername(token);
         
         // Lấy booking trước khi hủy
-        Optional<Booking> bookingOpt = bookingRepository.findByRidesIdAndPassengerEmail(rideId, username);
+        Optional<Booking> bookingOpt = bookingRepository.findByRidesIdAndPassengerEmail(bookingId, username);
         
         // Hủy booking
-        BookingDTO bookingDTO = bookingService.cancleBookings(rideId, username);
+        BookingDTO bookingDTO = bookingService.cancleBookings(bookingId, username);
         
         // Gửi thông báo cho tài xế nếu booking tồn tại
         if (bookingOpt.isPresent()) {

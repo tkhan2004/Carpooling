@@ -43,18 +43,20 @@ public class UserController
 
     @PutMapping("/update-profile")
     @PreAuthorize("hasAnyRole('DRIVER', 'PASSENGER')")
-    public ResponseEntity<ApiResponse<?>> updateProfile(@RequestParam("fullName") String fullName,
-                                                                           @RequestParam("phone") String phone,
-                                                                           @RequestParam(value = "avatarImage", required = false) MultipartFile avatarImage,
-                                                                           @RequestParam(value = "licenseImage", required = false) MultipartFile licenseImage,
-                                                                           @RequestParam(value = "vehicleImage", required = false) MultipartFile vehicleImage,
-                                                                           HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<?>> updateProfile(
+            @RequestParam("fullName") String fullName,
+            @RequestParam("phone") String phone,
+            @RequestParam(value = "avatarImage", required = false) MultipartFile avatarImage,
+            @RequestParam(value = "licenseImage", required = false) MultipartFile licenseImage,
+            @RequestParam(value = "vehicleImage", required = false) MultipartFile vehicleImage,
+            HttpServletRequest request) {
+
         String token = jwtUtil.extractTokenFromRequest(request);
         String email = jwtUtil.extractUsername(token);
         Optional<Users> optionalUser = userService.findByEmail(email);
 
         if (optionalUser.isEmpty()) {
-            ApiResponse<Object> response = (new ApiResponse<>(false,  "Không tìm thấy người dùng", null));
+            ApiResponse<Object> response = new ApiResponse<>(false, "Không tìm thấy người dùng", null);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
@@ -63,14 +65,17 @@ public class UserController
         userUpdateDTO.setFullName(fullName);
         userUpdateDTO.setPhone(phone);
 
+        // ✅ LUÔN SET avatar cho mọi user
+        userUpdateDTO.setAvatarImage(avatarImage);
+
+        // ✅ CHỈ tài xế mới set license/vehicle
         if (user.getRole() != null && "DRIVER".equalsIgnoreCase(user.getRole().getName())) {
-            userUpdateDTO.setAvatarImage(avatarImage);
             userUpdateDTO.setLicenseImageUrl(licenseImage);
             userUpdateDTO.setVehicleImageUrl(vehicleImage);
         }
 
         String message = userService.updateProfile(token, userUpdateDTO);
-        ApiResponse<Object> response = (new ApiResponse<>(true,  message, null));
+        ApiResponse<Object> response = new ApiResponse<>(true, message, null);
         return ResponseEntity.ok(response);
     }
 }
