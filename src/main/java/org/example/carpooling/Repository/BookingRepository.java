@@ -18,7 +18,7 @@ public interface
 BookingRepository extends JpaRepository<Booking,Long> {
 
     List<Booking> findByRides_IdAndPassenger_Id(Long rideId, Long passengerId);
-    List<Booking> findAllByPassenger(Users passenger);
+    List<Booking> findBookingByStatus(BookingStatus status);
     List<Booking> findAllByRidesIn(List<Rides> rides);
     
     // Tìm booking theo ride ID và email của hành khách
@@ -28,4 +28,9 @@ BookingRepository extends JpaRepository<Booking,Long> {
     List<Booking> findByRidesId(Long rideId);
 
     boolean existsByPassengerAndRidesAndStatusIn(Users passenger, Rides ride, List<BookingStatus> statuses);
+
+    List<Booking> findByPassenger_Email(String passengerEmail);
+
+    @Query("SELECT b FROM Booking b WHERE b.passenger.email = :email")
+    List<Booking> findBookingsByPassengerEmail(@Param("email") String email);
 }

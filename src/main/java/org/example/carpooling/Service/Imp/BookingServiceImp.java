@@ -16,9 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-
 
 @Service
 public class BookingServiceImp implements BookingService {
@@ -31,6 +29,8 @@ public class BookingServiceImp implements BookingService {
     @Autowired
     BookingRepository bookingRepository;
 
+    @Autowired
+    FileServiceImp fileService;
 
     // Khách book
     @Override
@@ -68,56 +68,72 @@ public class BookingServiceImp implements BookingService {
 
         bookingRepository.save(booking);
 
-        return new BookingDTO(booking);
+        return new BookingDTO(booking, fileService);
     }
 
-
-    // Khách xác nhận thành công
     @Override
     public BookingDTO passengerConfirm(Long rideId, String email) {
         Users passenger = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hành khách"));
 
-        // Truy vấn danh sách booking phù hợp
         List<Booking> bookings = bookingRepository.findByRides_IdAndPassenger_Id(rideId, passenger.getId());
-
         if (bookings.isEmpty()) {
             throw new RuntimeException("Không tìm thấy booking cho hành khách này");
         }
 
-        // Giả sử chỉ lấy booking đầu tiên (nếu bạn đã giới hạn 1 người chỉ được book 1 lần)
         Booking booking = bookings.get(0);
 
-        booking.setStatus(BookingStatus.PASSENGER_CONFIRMED);
-        bookingRepository.save(booking);
-
-        // Nếu tài xế đã xác nhận → cập nhật Ride thành COMPLETED
-        if (booking.getRides().getStatus() == RideStatus.DRIVER_CONFIRMED) {
-            booking.getRides().setStatus(RideStatus.COMPLETED);
-            rideRepository.save(booking.getRides());
+        // Xử lý trạng thái xác nhận
+        if (booking.getStatus() == BookingStatus.DRIVER_CONFIRMED) {
+            booking.setStatus(BookingStatus.COMPLETED);
+        } else if (booking.getStatus() == BookingStatus.IN_PROGRESS || booking.getStatus() == BookingStatus.PENDING) {
+            booking.setStatus(BookingStatus.PASSENGER_CONFIRMED);
         }
 
-        return new BookingDTO(booking);
+        bookingRepository.save(booking);
+
+        // Nếu tất cả booking đã hoàn tất => set ride thành COMPLETED
+        List<Booking> allBookings = bookingRepository.findByRidesId(rideId);
+        boolean allCompleted = allBookings.stream()
+                .allMatch(b -> b.getStatus() == BookingStatus.COMPLETED);
+
+        if (allCompleted) {
+            Rides ride = booking.getRides();
+            ride.setStatus(RideStatus.COMPLETED);
+            rideRepository.save(ride);
+        }
+
+        return new BookingDTO(booking, fileService);
     }
 
-    //Tài xế xác nhận thành công
     @Override
     public void driverMarkCompleted(Long rideId) {
-        Rides ride = rideRepository.findById(rideId).orElseThrow();
-        ride.setStatus(RideStatus.DRIVER_CONFIRMED);
+        Rides ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy chuyến đi"));
 
-        Optional<Booking> bookings = bookingRepository.findById(rideId);
-        boolean allPassengerConfirmed = bookings.stream()
-                .allMatch(b -> b.getStatus() == BookingStatus.PASSENGER_CONFIRMED);
+        List<Booking> bookings = bookingRepository.findByRidesId(rideId);
 
-        if (allPassengerConfirmed) {
+        for (Booking booking : bookings) {
+            if (booking.getStatus() == BookingStatus.PASSENGER_CONFIRMED) {
+                booking.setStatus(BookingStatus.COMPLETED);
+            } else if (booking.getStatus() == BookingStatus.IN_PROGRESS || booking.getStatus() == BookingStatus.PENDING) {
+                booking.setStatus(BookingStatus.DRIVER_CONFIRMED);
+            }
+            bookingRepository.save(booking);
+        }
+
+        boolean allCompleted = bookings.stream()
+                .allMatch(b -> b.getStatus() == BookingStatus.COMPLETED);
+
+        if (allCompleted) {
             ride.setStatus(RideStatus.COMPLETED);
+        } else {
+            ride.setStatus(RideStatus.DRIVER_CONFIRMED);
         }
 
         rideRepository.save(ride);
     }
 
-    //
     @Override
     @Transactional
     public void driverAcceptBooking(Long bookingId) {
@@ -128,7 +144,6 @@ public class BookingServiceImp implements BookingService {
             throw new RuntimeException("Chỉ có thể duyệt booking đang ở trạng thái PENDING");
         }
 
-        // Trừ ghế
         Rides ride = booking.getRides();
         int remainingSeats = ride.getAvailableSeats() - booking.getSeatsBooked();
         if (remainingSeats < 0) {
@@ -136,9 +151,8 @@ public class BookingServiceImp implements BookingService {
         }
 
         ride.setAvailableSeats(remainingSeats);
-        rideRepository.save(ride); // nhớ lưu lại ride
+        rideRepository.save(ride);
 
-        // Cập nhật trạng thái booking
         booking.setStatus(BookingStatus.ACCEPTED);
         bookingRepository.save(booking);
     }
@@ -148,21 +162,19 @@ public class BookingServiceImp implements BookingService {
         Users driver = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
 
-        // Lấy danh sách tất cả ride của driver đó
         List<Rides> rides = rideRepository.findByDriver_Email(email);
-
-        // Lấy tất cả booking thuộc những ride đó
         List<Booking> bookings = bookingRepository.findAllByRidesIn(rides);
 
-        return bookings.stream().map(BookingDTO::new).collect(Collectors.toList());
+        return bookings.stream().map(b -> new BookingDTO(b, fileService)).collect(Collectors.toList());
     }
 
     @Override
     public List<BookingDTO> getBookingsForPassenger(String email) {
-        Users passenger = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Passenger not found"));
-        List<Booking> bookings = bookingRepository.findAllByPassenger(passenger);
-        return bookings.stream().map(BookingDTO::new).collect(Collectors.toList());
+        List<Booking> bookings = bookingRepository.findBookingsByPassengerEmail(email);
+
+        return bookings.stream()
+                .map(booking -> new BookingDTO(booking, fileService))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -170,30 +182,35 @@ public class BookingServiceImp implements BookingService {
         Users passenger = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hành khách"));
 
-        // Truy vấn danh sách booking phù hợp
         List<Booking> bookings = bookingRepository.findByRides_IdAndPassenger_Id(rideId, passenger.getId());
 
         if (bookings.isEmpty()) {
             throw new RuntimeException("Không tìm thấy booking cho hành khách này");
         }
 
-        // Giả sử chỉ lấy booking đầu tiên (nếu bạn đã giới hạn 1 người chỉ được book 1 lần)
         Booking booking = bookings.get(0);
-        // Trả lại ghế cho chuyến đi
         Rides ride = booking.getRides();
-        ride.setAvailableSeats(ride.getAvailableSeats() + booking.getSeatsBooked ());
+        ride.setAvailableSeats(ride.getAvailableSeats() + booking.getSeatsBooked());
         rideRepository.save(ride);
 
         booking.setStatus(BookingStatus.PASSENGER_CONFIRMED);
         bookingRepository.save(booking);
 
-        // Nếu tài xế đã xác nhận → cập nhật Ride thành COMPLETED
         if (booking.getRides().getStatus() == RideStatus.DRIVER_CONFIRMED) {
             booking.getRides().setStatus(RideStatus.COMPLETED);
             rideRepository.save(booking.getRides());
         }
 
-        return new BookingDTO(booking);
+        return new BookingDTO(booking, fileService);
+    }
 
+    @Override
+    public List<BookingDTO> getBookingsForPassengerByStatus(String passengerEmail, List<BookingStatus> statuses) {
+        return List.of();
+    }
+
+    @Override
+    public List<BookingDTO> getBookingsForDriverByStatus(String driverEmail, List<BookingStatus> statuses) {
+        return List.of();
     }
 }

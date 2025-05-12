@@ -42,4 +42,5 @@ public interface RideRepository extends JpaRepository<Rides, Long> {
             @Param("seats") Integer seats);
 
     List<Rides> findByDriverAndStatus(Users driver, RideStatus status);
+    List<Rides> findRidesByStatus(RideStatus status);
 }

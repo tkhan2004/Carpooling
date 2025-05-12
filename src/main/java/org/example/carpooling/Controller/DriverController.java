@@ -15,6 +15,7 @@ import org.example.carpooling.Repository.RideRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.BookingService;
 import org.example.carpooling.Service.Imp.BookingServiceImp;
+import org.example.carpooling.Service.Imp.FileServiceImp;
 import org.example.carpooling.Service.NotificationService;
 import org.example.carpooling.Service.RideService;
 import org.example.carpooling.Service.UserService;
@@ -24,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +45,9 @@ public class DriverController {
     RideService rideService;
 
     @Autowired
+    UserService userService;
+
+    @Autowired
     BookingRepository bookingRepository;
 
     @Autowired
@@ -52,20 +57,7 @@ public class DriverController {
     NotificationService notificationService;
 
     @Autowired
-    UserService userService;
-
-    @GetMapping("/booking/{id}")
-    @PreAuthorize("hasRole('DRIVER')")
-    public ResponseEntity<ApiResponse<BookingDTO>> getBookingDetail(@PathVariable Long id) {
-        Optional<Booking> booking = bookingRepository.findById(id);
-        if (booking.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(false, "Không tìm thấy booking", null));
-        }
-
-        BookingDTO dto = new BookingDTO(booking.get());
-        return ResponseEntity.ok(new ApiResponse<>(true, "Chi tiết booking", dto));
-    }
+    FileServiceImp fileService;
 
     @GetMapping("/profile")
     @PreAuthorize("hasAnyRole('DRIVER')")
@@ -105,8 +97,34 @@ public class DriverController {
     public ResponseEntity<ApiResponse<List<BookingDTO>>> getDriverBookings(HttpServletRequest request) {
         String token = jwtUtil.extractTokenFromRequest(request);
         String driverEmail = jwtUtil.extractUsername(token);
+        
+        // Lấy danh sách booking của tài xế
         List<BookingDTO> bookings = bookingService.getBookingsForDriver(driverEmail);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Danh sách bookings của tài xế", bookings));
+        
+        // Phân loại bookings theo trạng thái để cung cấp thông tin thống kê
+        long pendingCount = bookings.stream().filter(b -> b.getStatus() == BookingStatus.PENDING).count();
+        long acceptedCount = bookings.stream().filter(b -> b.getStatus() == BookingStatus.ACCEPTED).count();
+        long completedCount = bookings.stream().filter(b -> 
+                b.getStatus() == BookingStatus.PASSENGER_CONFIRMED || 
+                b.getStatus() == BookingStatus.DRIVER_CONFIRMED || 
+                b.getStatus() == BookingStatus.COMPLETED).count();
+        
+        // Thêm thông tin thống kê về số ghế và doanh thu
+        int totalBookedSeats = bookings.stream()
+                .filter(b -> b.getStatus() != BookingStatus.CANCELLED && b.getStatus() != BookingStatus.REJECTED)
+                .mapToInt(BookingDTO::getSeatsBooked)
+                .sum();
+        
+        BigDecimal totalRevenue = bookings.stream()
+                .filter(b -> b.getStatus() != BookingStatus.CANCELLED && b.getStatus() != BookingStatus.REJECTED)
+                .map(BookingDTO::getTotalPrice)
+                .filter(price -> price != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        String message = String.format("Danh sách bookings của tài xế (Chờ xác nhận: %d, Đã chấp nhận: %d, Đã hoàn thành: %d, Tổng ghế đã đặt: %d, Tổng doanh thu: %s)",
+                pendingCount, acceptedCount, completedCount, totalBookedSeats, totalRevenue.toString());
+        
+        return ResponseEntity.ok(new ApiResponse<>(true, message, bookings));
     }
 
     // Chấp nhận chuyến đi
