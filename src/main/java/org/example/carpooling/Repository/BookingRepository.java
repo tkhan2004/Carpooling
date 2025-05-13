@@ -22,8 +22,7 @@ BookingRepository extends JpaRepository<Booking,Long> {
     List<Booking> findAllByRidesIn(List<Rides> rides);
     
     // Tìm booking theo ride ID và email của hành khách
-    Optional<Booking> findByRidesIdAndPassengerEmail(Long rideId, String passengerEmail);
-    
+    List<Booking> findByRides_IdAndPassenger_Email(Long rideId, String email);
     // Tìm tất cả booking của một chuyến đi
     List<Booking> findByRidesId(Long rideId);
 
@@ -33,4 +32,9 @@ BookingRepository extends JpaRepository<Booking,Long> {
 
     @Query("SELECT b FROM Booking b WHERE b.passenger.email = :email")
     List<Booking> findBookingsByPassengerEmail(@Param("email") String email);
+
+    List<Booking> findByRidesIdAndStatusIn(Long id, List<BookingStatus> statuses);
+
+    @Query("SELECT b FROM Booking b WHERE b.rides.id = :rideId AND b.passenger.email = :email AND b.status <> 'CANCELLED' ORDER BY b.id DESC")
+    List<Booking> findActiveBookingsByRideAndPassenger(Long rideId, String email);
 }

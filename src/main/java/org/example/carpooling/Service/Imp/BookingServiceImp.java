@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -76,7 +76,13 @@ public class BookingServiceImp implements BookingService {
         Users passenger = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hành khách"));
 
-        List<Booking> bookings = bookingRepository.findByRides_IdAndPassenger_Id(rideId, passenger.getId());
+        List<Booking> bookings = bookingRepository.findByRides_IdAndPassenger_Email(rideId, email)
+                .stream()
+                .filter(booking -> booking.getStatus() != BookingStatus.CANCELLED)
+                .sorted(Comparator.comparing(Booking::getId).reversed())
+                .collect(Collectors.toList());
+
+
         if (bookings.isEmpty()) {
             throw new RuntimeException("Không tìm thấy booking cho hành khách này");
         }
@@ -113,6 +119,10 @@ public class BookingServiceImp implements BookingService {
 
         List<Booking> bookings = bookingRepository.findByRidesId(rideId);
 
+        if (bookings.isEmpty()) {
+            throw new RuntimeException("Không có hành khách nào trong chuyến đi này");
+        }
+
         for (Booking booking : bookings) {
             if (booking.getStatus() == BookingStatus.PASSENGER_CONFIRMED) {
                 booking.setStatus(BookingStatus.COMPLETED);
@@ -122,10 +132,11 @@ public class BookingServiceImp implements BookingService {
             bookingRepository.save(booking);
         }
 
-        boolean allCompleted = bookings.stream()
+        boolean allActive = bookings.stream()
+                .filter(b -> b.getStatus() != BookingStatus.CANCELLED) // Bỏ qua các booking đã hủy
                 .allMatch(b -> b.getStatus() == BookingStatus.COMPLETED);
 
-        if (allCompleted) {
+        if (allActive) {
             ride.setStatus(RideStatus.COMPLETED);
         } else {
             ride.setStatus(RideStatus.DRIVER_CONFIRMED);
@@ -153,20 +164,14 @@ public class BookingServiceImp implements BookingService {
         ride.setAvailableSeats(remainingSeats);
         rideRepository.save(ride);
 
-        booking.setStatus(BookingStatus.ACCEPTED);
+        if(booking.getStatus() == BookingStatus.REJECTED){
+            System.out.println("Không thể acccept");
+        }else{
+            booking.setStatus(BookingStatus.ACCEPTED);
+        }
         bookingRepository.save(booking);
     }
 
-    @Override
-    public List<BookingDTO> getBookingsForDriver(String email) {
-        Users driver = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
-
-        List<Rides> rides = rideRepository.findByDriver_Email(email);
-        List<Booking> bookings = bookingRepository.findAllByRidesIn(rides);
-
-        return bookings.stream().map(b -> new BookingDTO(b, fileService)).collect(Collectors.toList());
-    }
 
     @Override
     public List<BookingDTO> getBookingsForPassenger(String email) {
@@ -178,7 +183,7 @@ public class BookingServiceImp implements BookingService {
     }
 
     @Override
-    public BookingDTO cancleBookings(Long rideId, String email) {
+    public BookingDTO cancelBookings(Long rideId, String email) {
         Users passenger = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hành khách"));
 
@@ -188,20 +193,31 @@ public class BookingServiceImp implements BookingService {
             throw new RuntimeException("Không tìm thấy booking cho hành khách này");
         }
 
-        Booking booking = bookings.get(0);
-        Rides ride = booking.getRides();
-        ride.setAvailableSeats(ride.getAvailableSeats() + booking.getSeatsBooked());
-        rideRepository.save(ride);
+        Booking cancelledBooking = null;
 
-        booking.setStatus(BookingStatus.PASSENGER_CONFIRMED);
-        bookingRepository.save(booking);
+        for (Booking booking : bookings) {
+            BookingStatus status = booking.getStatus();
 
-        if (booking.getRides().getStatus() == RideStatus.DRIVER_CONFIRMED) {
-            booking.getRides().setStatus(RideStatus.COMPLETED);
-            rideRepository.save(booking.getRides());
+            // Chỉ xử lý CANCEL nếu booking chưa hoàn thành
+            if (status == BookingStatus.ACCEPTED || status == BookingStatus.PENDING) {
+
+                // Nếu đã được tài xế ACCEPT thì phải hoàn lại ghế
+                if (status == BookingStatus.ACCEPTED) {
+                    Rides ride = booking.getRides();
+                    ride.setAvailableSeats(ride.getAvailableSeats() + booking.getSeatsBooked());
+                    rideRepository.save(ride);
+                }
+
+                booking.setStatus(BookingStatus.CANCELLED);
+                cancelledBooking = bookingRepository.save(booking); // Lưu trạng thái huỷ
+            }
         }
 
-        return new BookingDTO(booking, fileService);
+        if (cancelledBooking == null) {
+            throw new RuntimeException("Không có booking nào đủ điều kiện để huỷ");
+        }
+
+        return new BookingDTO(cancelledBooking, fileService);
     }
 
     @Override
@@ -210,7 +226,74 @@ public class BookingServiceImp implements BookingService {
     }
 
     @Override
+    public List<BookingDTO> getBookingsForDriver(String email) {
+        Users driver = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài xế với email: " + email));
+
+        List<Rides> driverRides = rideRepository.findByDriver_Email(email);
+
+        // Thu thập tất cả bookings theo từng chuyến đi
+        Map<Long, List<Booking>> rideToBookingsMap = new HashMap<>();
+        List<Booking> allDriverBookings = new ArrayList<>();
+
+        for (Rides ride : driverRides) {
+            List<Booking> bookingsForRide = bookingRepository.findByRidesId(ride.getId());
+            rideToBookingsMap.put(ride.getId(), bookingsForRide);
+            allDriverBookings.addAll(bookingsForRide);
+        }
+
+        // Chuyển đổi sang BookingDTO và thêm thông tin hành khách cùng chuyến
+        return allDriverBookings.stream().map(booking -> {
+            BookingDTO dto = new BookingDTO(booking, fileService);
+
+            // Thêm danh sách hành khách cùng chuyến, BAO GỒM tất cả trạng thái
+            List<Booking> sameRideBookings = rideToBookingsMap.get(booking.getRides().getId());
+            List<BookingDTO.PassengerInfo> fellowPassengers = sameRideBookings.stream()
+                    .filter(b -> !b.getId().equals(booking.getId())) // Loại trừ booking hiện tại
+                    .map(b -> new BookingDTO.PassengerInfo(b, fileService))
+                    .collect(Collectors.toList());
+
+            dto.setFellowPassengers(fellowPassengers);
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
     public List<BookingDTO> getBookingsForDriverByStatus(String driverEmail, List<BookingStatus> statuses) {
-        return List.of();
+        Users driver = userRepository.findByEmail(driverEmail)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài xế với email: " + driverEmail));
+
+        List<Rides> driverRides = rideRepository.findByDriver_Email(driverEmail);
+
+        // Tìm tất cả bookings của tài xế theo trạng thái đã chỉ định
+        List<Booking> driverBookings = new ArrayList<>();
+        Map<Long, List<Booking>> rideToBookingsMap = new HashMap<>();
+
+        for (Rides ride : driverRides) {
+            // Lấy tất cả bookings cho ride, không phụ thuộc vào trạng thái
+            List<Booking> allBookingsForRide = bookingRepository.findByRidesId(ride.getId());
+            // Lấy các bookings theo trạng thái được yêu cầu
+            List<Booking> filteredBookings = bookingRepository.findByRidesIdAndStatusIn(ride.getId(), statuses);
+
+            driverBookings.addAll(filteredBookings);
+
+            // Lưu TẤT CẢ bookings (không phụ thuộc vào trạng thái) theo rideId
+            rideToBookingsMap.put(ride.getId(), allBookingsForRide);
+        }
+
+        // Chuyển đổi từ Booking sang BookingDTO với thông tin về hành khách cùng chuyến
+        return driverBookings.stream().map(booking -> {
+            BookingDTO dto = new BookingDTO(booking, fileService);
+
+            // Thêm danh sách hành khách cùng chuyến, BAO GỒM tất cả trạng thái
+            List<Booking> sameRideBookings = rideToBookingsMap.get(booking.getRides().getId());
+            List<BookingDTO.PassengerInfo> fellowPassengers = sameRideBookings.stream()
+                    .filter(b -> !b.getId().equals(booking.getId())) // Loại trừ booking hiện tại
+                    .map(b -> new BookingDTO.PassengerInfo(b, fileService))
+                    .collect(Collectors.toList());
+
+            dto.setFellowPassengers(fellowPassengers);
+            return dto;
+        }).collect(Collectors.toList());
     }
 }

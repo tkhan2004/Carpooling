@@ -106,6 +106,20 @@ public class RideController {
             ApiResponse<RideRequestDTO> response = new ApiResponse<>(false, "Cập nhật chuyến đi thất bại",null);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);}
         }
+
+    @GetMapping("/all-rides")
+    public ResponseEntity<ApiResponse<?>> getAllRide(HttpServletRequest request){
+        String token = jwtUtil.extractTokenFromRequest(request);
+        String email = jwtUtil.extractUsername(token);
+
+        List<RideRequestDTO> requestDTOS = rideService.getAllRides();
+        ApiResponse<List<RideRequestDTO>> response = new ApiResponse<>(true, "Tất cả chuyến đi ",requestDTOS);
+        return ResponseEntity.ok(response);
     }
+
+
+    }
+
+
 
 

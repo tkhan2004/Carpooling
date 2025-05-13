@@ -18,4 +18,6 @@ public interface RideService {
                                      String destination,
                                      LocalDate startTime,
                                       Integer seats);
+    public List<RideRequestDTO> getAllRides();
+
 }

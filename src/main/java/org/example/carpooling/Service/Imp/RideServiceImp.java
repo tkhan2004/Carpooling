@@ -207,4 +207,23 @@ public class RideServiceImp implements RideService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<RideRequestDTO> getAllRides() {
+        List<Rides> rides = rideRepository.findAll();
+        return rides.stream()
+                .map(ride -> new RideRequestDTO(
+                        ride.getId(),
+                        ride.getAvailableSeats(),
+                        ride.getDriver().getFullName(),
+                        ride.getDriver().getEmail(),
+                        ride.getDeparture(),
+                        ride.getDestination(),
+                        ride.getStartTime(),
+                        ride.getPricePerSeat(),
+                        ride.getTotalSeats(),
+                        ride.getStatus()
+                ))
+                .collect(Collectors.toList());
+    }
 }

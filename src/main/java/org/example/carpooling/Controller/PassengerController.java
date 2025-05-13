@@ -113,7 +113,6 @@ public class PassengerController {
     }
 
 
-    // Khách xác nhận thành công
     @PutMapping("/passenger-confirm/{rideId}")
     @PreAuthorize("hasAnyRole('PASSENGER')")
     public ResponseEntity<ApiResponse<BookingDTO>> passengerConfirm(@PathVariable Long rideId, HttpServletRequest request) {
@@ -124,9 +123,9 @@ public class PassengerController {
         bookingService.passengerConfirm(rideId, username);
 
         // Lấy booking để gửi thông báo
-        Optional<Booking> bookingOpt = bookingRepository.findByRidesIdAndPassengerEmail(rideId, username);
-        if (bookingOpt.isPresent()) {
-            Booking booking = bookingOpt.get();
+        List<Booking> bookingList = bookingRepository.findByRides_IdAndPassenger_Email(rideId, username);
+        if (!bookingList.isEmpty()) {
+            Booking booking = bookingList.get(0); // hoặc loop nếu cần gửi nhiều
 
             // Gửi thông báo cho tài xế
             notificationService.sendNotification(
@@ -197,22 +196,20 @@ public class PassengerController {
         return ResponseEntity.ok(new ApiResponse<>(true, message, dto));
     }
 
-    @PutMapping("/cancel-bookings/{bookingId}")
+    @PutMapping("/cancel-bookings/{rideId}")
     @PreAuthorize("hasRole('PASSENGER')")
-    public ResponseEntity<ApiResponse<BookingDTO>> cancelBooking(@PathVariable Long bookingId, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<BookingDTO>> cancelBooking(@PathVariable Long rideId, HttpServletRequest request) {
         String token = jwtUtil.extractTokenFromRequest(request);
         String username = jwtUtil.extractUsername(token);
 
         // Lấy booking trước khi hủy
-        Optional<Booking> bookingOpt = bookingRepository.findByRidesIdAndPassengerEmail(bookingId, username);
-
+        List<Booking> bookingList = bookingRepository.findByRides_IdAndPassenger_Email(rideId, username);
         // Hủy booking
-        BookingDTO bookingDTO = bookingService.cancleBookings(bookingId, username);
+        BookingDTO bookingDTO = bookingService.cancelBookings(rideId, username);
 
         // Gửi thông báo cho tài xế nếu booking tồn tại
-        if (bookingOpt.isPresent()) {
-            Booking booking = bookingOpt.get();
-
+        if (!bookingList.isEmpty()) {
+            Booking booking = bookingList.get(0); // Hoặc chọn đúng booking cần thông báo
             notificationService.sendNotification(
                     booking.getRides().getDriver().getEmail(),
                     "Hành khách đã hủy booking",

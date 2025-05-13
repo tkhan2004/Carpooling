@@ -24,7 +24,7 @@ public class RideStatusSchedulerImp implements RideStatusScheduler {
     BookingRepository bookingRepository;
 
     @Override
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 30000)
     public void updateOngoingRides() {
         LocalDateTime now = LocalDateTime.now();
         List<Booking> bookings = bookingRepository.findBookingByStatus(BookingStatus.ACCEPTED);
