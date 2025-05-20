@@ -2,6 +2,8 @@ package org.example.carpooling.Dto;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.constraints.Size;
+
 public class RegisterRequest {
     private String email;
     private Long roleId; // Thêm dòng này
@@ -55,6 +57,7 @@ public class RegisterRequest {
         this.fullName = fullName;
     }
 
+    @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     private String password;
     private String fullName;
 }

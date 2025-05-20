@@ -72,10 +72,13 @@ public class ChatMessageServiceImp implements ChatMessageService {
     }
     
     @Override
+    // Phương thức để tạo room_id một cách nhất quán
     public String createRoomId(String email1, String email2) {
-        // Sắp xếp email để đảm bảo cùng một roomId cho cùng cặp người dùng
+        // Sắp xếp email để đảm bảo room_id luôn nhất quán
         String[] emails = {email1, email2};
         Arrays.sort(emails);
         return emails[0] + "_" + emails[1];
     }
+
+
 }

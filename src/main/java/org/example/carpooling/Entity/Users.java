@@ -6,6 +6,8 @@ import java.util.List;
 import jakarta.persistence.*;
 import org.example.carpooling.Entity.Status.DriverStatus;
 
+import javax.validation.constraints.Size;
+
 @Entity
 @Table(name = "users")
 public class Users {

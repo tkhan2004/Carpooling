@@ -183,19 +183,25 @@ public class BookingServiceImp implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingDTO cancelBookings(Long rideId, String email) {
         Users passenger = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hành khách"));
 
-        List<Booking> bookings = bookingRepository.findByRides_IdAndPassenger_Id(rideId, passenger.getId());
+        // Chỉ tìm các booking CHƯA bị hủy hoặc từ chối
+        List<Booking> activeBookings = bookingRepository.findByRides_IdAndPassenger_IdAndStatusNotInOrderByCreatedAtDesc(
+                rideId,
+                passenger.getId(),
+                Arrays.asList(BookingStatus.CANCELLED, BookingStatus.REJECTED, BookingStatus.COMPLETED)
+        );
 
-        if (bookings.isEmpty()) {
-            throw new RuntimeException("Không tìm thấy booking cho hành khách này");
+        if (activeBookings.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy booking đang hoạt động cho hành khách này");
         }
 
         Booking cancelledBooking = null;
 
-        for (Booking booking : bookings) {
+        for (Booking booking : activeBookings) {
             BookingStatus status = booking.getStatus();
 
             // Chỉ xử lý CANCEL nếu booking chưa hoàn thành
@@ -210,6 +216,13 @@ public class BookingServiceImp implements BookingService {
 
                 booking.setStatus(BookingStatus.CANCELLED);
                 cancelledBooking = bookingRepository.save(booking); // Lưu trạng thái huỷ
+
+                // Chỉ hủy booking mới nhất
+                break;
+            } else if (status == BookingStatus.IN_PROGRESS) {
+                throw new RuntimeException("Không thể hủy chuyến đi đang diễn ra");
+            } else if (status == BookingStatus.PASSENGER_CONFIRMED || status == BookingStatus.DRIVER_CONFIRMED) {
+                throw new RuntimeException("Không thể hủy chuyến đi đã được xác nhận");
             }
         }
 

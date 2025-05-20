@@ -4,7 +4,7 @@ import org.example.carpooling.Dto.*;
 import org.example.carpooling.Entity.Role;
 import org.example.carpooling.Entity.Status.DriverStatus;
 import org.example.carpooling.Entity.Users;
-import org.example.carpooling.Exception.Exception;
+import org.example.carpooling.Exception.GlobalException;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Repository.RoleRepository;
 import org.example.carpooling.Repository.UserRepository;
@@ -49,8 +49,8 @@ public class UserServiceImp implements UserService {
         user.setPhone(request.getPhone());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setStatus(null);
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception(request.getEmail());
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new RuntimeException("Email này đã tồn tại");
         }
 
         if (avatarImage != null && !avatarImage.isEmpty()) {
@@ -74,15 +74,16 @@ public class UserServiceImp implements UserService {
                                 MultipartFile avatarImage,
                                 MultipartFile licenseImage,
                                 MultipartFile vehicleImage) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception(request.getEmail());
-        }
+
         Users user = new Users();
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new RuntimeException("Email này đã tồn tại");
 
+        }
         if (avatarImage != null && !avatarImage.isEmpty()) {
             String savedAvatar = fileServiceImp.saveFile(avatarImage);
             if (savedAvatar != null) {

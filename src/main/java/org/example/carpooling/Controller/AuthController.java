@@ -1,33 +1,26 @@
 package org.example.carpooling.Controller;
 
-import io.jsonwebtoken.Jwt;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import org.example.carpooling.Dto.*;
 import org.example.carpooling.Entity.Users;
+import org.example.carpooling.Exception.GlobalException;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Payload.ApiResponse;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.FileService;
 import org.example.carpooling.Service.Imp.FileServiceImp;
-import org.example.carpooling.Service.Imp.UserServiceImp;
 import org.example.carpooling.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Base64;
+import javax.validation.Valid;
 import java.util.Optional;
 
 @CrossOrigin("*")
@@ -54,9 +47,11 @@ public class AuthController {
     @Autowired
     private FileServiceImp fileServiceImp;
 
-    @PostMapping(value = "/passenger-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<UserDTO>> passengerRegister(@RequestParam String email,
-                                               @RequestParam String password,
+    @PostMapping(
+    value = "/passenger-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+
+    public ResponseEntity<ApiResponse<UserDTO>> passengerRegister( @RequestParam String email,
+                                               @RequestParam @Valid String password,
                                                @RequestParam String fullName,
                                                @RequestParam String phone,
                                                @RequestPart(value = "avatarImage", required = false) MultipartFile avatarImage){
@@ -80,7 +75,7 @@ public class AuthController {
             );
             return ResponseEntity.ok(successResponse);
 
-        } catch (org.example.carpooling.Exception.Exception ex) {
+        } catch (GlobalException ex) {
             // Trường hợp email trùng
             ApiResponse<?> errorResponse = new ApiResponse<>(
                     false,
@@ -100,10 +95,10 @@ public class AuthController {
         }
     }// Đăng ký
 
-    @PostMapping(value = "/driver-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/driver-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
     public ResponseEntity<ApiResponse<DriverDTO>> driverRegister(
             @RequestParam String email,
-            @RequestParam String password,
+            @RequestParam @Valid String password,
             @RequestParam String fullName,
             @RequestParam String phone,
             @RequestPart(value = "avatarImage", required = false) MultipartFile avatarImage,
@@ -143,7 +138,7 @@ public class AuthController {
             );
             return ResponseEntity.ok(successResponse);
 
-        } catch (org.example.carpooling.Exception.Exception ex) {
+        } catch (GlobalException ex) {
             // Xử lý lỗi như cũ
             ApiResponse<DriverDTO> errorResponse = new ApiResponse<>(
                     false,

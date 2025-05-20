@@ -34,7 +34,11 @@ BookingRepository extends JpaRepository<Booking,Long> {
     List<Booking> findBookingsByPassengerEmail(@Param("email") String email);
 
     List<Booking> findByRidesIdAndStatusIn(Long id, List<BookingStatus> statuses);
+    @Query("SELECT b FROM Booking b WHERE b.rides.id = :rideId AND b.passenger.id = :passengerId AND b.status NOT IN :statuses ORDER BY b.createdAt DESC")
+    List<Booking> findByRides_IdAndPassenger_IdAndStatusNotInOrderByCreatedAtDesc(
+            @Param("rideId") Long rideId,
+            @Param("passengerId") Long passengerId,
+            @Param("statuses") List<BookingStatus> statuses
+    );
 
-    @Query("SELECT b FROM Booking b WHERE b.rides.id = :rideId AND b.passenger.email = :email AND b.status <> 'CANCELLED' ORDER BY b.id DESC")
-    List<Booking> findActiveBookingsByRideAndPassenger(Long rideId, String email);
 }
