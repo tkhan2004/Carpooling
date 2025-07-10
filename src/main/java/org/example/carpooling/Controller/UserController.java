@@ -31,14 +31,17 @@ public class UserController
     @Autowired
     private UserService userService;
 
-
-
     @PutMapping("/change-pass")
     @PreAuthorize("hasAnyRole('DRIVER', 'PASSENGER')")
     public ResponseEntity<?> changePass(@RequestBody ChangePassDTO  changePassDTO, HttpServletRequest request) {
-        String token = jwtUtil.extractTokenFromRequest(request);
-        String mgs = userService.changePass(token,  changePassDTO);
-        return ResponseEntity.ok(mgs);
+        try {
+            String token = jwtUtil.extractTokenFromRequest(request);
+            String mgs = userService.changePass(token,  changePassDTO);
+            return ResponseEntity.ok(new ApiResponse<>(true, mgs, null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(false, "Đổi mật khẩu thất bại: " + e.getMessage(), null));
+        }
     }
 
     @PutMapping("/update-profile")
@@ -50,32 +53,38 @@ public class UserController
             @RequestParam(value = "licenseImage", required = false) MultipartFile licenseImage,
             @RequestParam(value = "vehicleImage", required = false) MultipartFile vehicleImage,
             HttpServletRequest request) {
+        try {
+            String token = jwtUtil.extractTokenFromRequest(request);
+            String email = jwtUtil.extractUsername(token);
+            Optional<Users> optionalUser = userService.findByEmail(email);
 
-        String token = jwtUtil.extractTokenFromRequest(request);
-        String email = jwtUtil.extractUsername(token);
-        Optional<Users> optionalUser = userService.findByEmail(email);
+            if (optionalUser.isEmpty()) {
+                ApiResponse<Object> response = new ApiResponse<>(false, "Không tìm thấy người dùng", null);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
 
-        if (optionalUser.isEmpty()) {
-            ApiResponse<Object> response = new ApiResponse<>(false, "Không tìm thấy người dùng", null);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            Users user = optionalUser.get();
+            UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
+            userUpdateDTO.setFullName(fullName);
+            userUpdateDTO.setPhone(phone);
+
+            // ✅ LUÔN SET avatar cho mọi user
+            userUpdateDTO.setAvatarImage(avatarImage);
+
+            // ✅ CHỈ tài xế mới set license/vehicle
+            if (user.getRole() != null && "DRIVER".equalsIgnoreCase(user.getRole().getName())) {
+                userUpdateDTO.setLicenseImageUrl(licenseImage);
+                userUpdateDTO.setVehicleImageUrl(vehicleImage);
+            }
+
+            String message = userService.updateProfile(token, userUpdateDTO);
+            ApiResponse<Object> response = new ApiResponse<>(true, message, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(false, "Cập nhật hồ sơ thất bại: " + e.getMessage(), null));
         }
-
-        Users user = optionalUser.get();
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
-        userUpdateDTO.setFullName(fullName);
-        userUpdateDTO.setPhone(phone);
-
-        // ✅ LUÔN SET avatar cho mọi user
-        userUpdateDTO.setAvatarImage(avatarImage);
-
-        // ✅ CHỈ tài xế mới set license/vehicle
-        if (user.getRole() != null && "DRIVER".equalsIgnoreCase(user.getRole().getName())) {
-            userUpdateDTO.setLicenseImageUrl(licenseImage);
-            userUpdateDTO.setVehicleImageUrl(vehicleImage);
-        }
-
-        String message = userService.updateProfile(token, userUpdateDTO);
-        ApiResponse<Object> response = new ApiResponse<>(true, message, null);
-        return ResponseEntity.ok(response);
     }
+
+
 }

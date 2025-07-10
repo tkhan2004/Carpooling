@@ -13,12 +13,9 @@ import org.example.carpooling.Payload.ApiResponse;
 import org.example.carpooling.Repository.BookingRepository;
 import org.example.carpooling.Repository.RideRepository;
 import org.example.carpooling.Repository.UserRepository;
-import org.example.carpooling.Service.BookingService;
+import org.example.carpooling.Service.*;
 import org.example.carpooling.Service.Imp.BookingServiceImp;
 import org.example.carpooling.Service.Imp.FileServiceImp;
-import org.example.carpooling.Service.NotificationService;
-import org.example.carpooling.Service.RideService;
-import org.example.carpooling.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +31,7 @@ import java.util.Optional;
 public class DriverController {
     @Autowired
     JwtUtil jwtUtil;
+
 
     @Autowired
     UserRepository userRepository;
@@ -52,164 +50,163 @@ public class DriverController {
 
     @Autowired
     BookingService bookingService;
-    
+
     @Autowired
     NotificationService notificationService;
 
     @Autowired
-    FileServiceImp fileService;
+    FileService fileService;
 
     @GetMapping("/profile")
     @PreAuthorize("hasAnyRole('DRIVER')")
     public ResponseEntity<?> getProfile(HttpServletRequest request) {
-        String token = jwtUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
+        try {
+            String token = jwtUtil.extractTokenFromRequest(request);
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
+            }
+
+            String email = jwtUtil.extractUsername(token);
+            Optional<Users> optionalUser = userRepository.findByEmail(email);
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
+            }
+
+            Users user = optionalUser.get();
+            DriverDTO driverDTO = userService.getUserDetails(user.getId());
+
+            return ResponseEntity.ok(new ApiResponse<>(true, "Thông tin cá nhân tài xế", driverDTO));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi lấy thông tin cá nhân", null));
         }
-
-        String email = jwtUtil.extractUsername(token);
-        Optional<Users> optionalUser = userRepository.findByEmail(email);
-        if (optionalUser.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
-        }
-
-        Users user = optionalUser.get();
-        DriverDTO driverDTO = userService.getUserDetails(user.getId());
-
-        return ResponseEntity.ok(driverDTO);
-
     }
 
-
-    // coi chuyến đi
     @GetMapping("/my-rides")
     @PreAuthorize(("hasRole('DRIVER')"))
     public ResponseEntity<ApiResponse<List<RideRequestDTO>>> getRide(HttpServletRequest request) {
-        String token = jwtUtil.extractTokenFromRequest(request);
-        String email = jwtUtil.extractUsername(token);
-        rideService.getRidesByDriverEmail(email);
-        ApiResponse<List<RideRequestDTO>> response = new ApiResponse<>(true, "Danh sách chuyến đi", rideService.getRidesByDriverEmail(email));
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        try {
+            String token = jwtUtil.extractTokenFromRequest(request);
+            String email = jwtUtil.extractUsername(token);
+            List<RideRequestDTO> rides = rideService.getRidesByDriverEmail(email);
+            ApiResponse<List<RideRequestDTO>> response = new ApiResponse<>(true, "Danh sách chuyến đi", rides);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lấy danh sách thất bại", null));
+        }
     }
 
     @GetMapping("/bookings")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<List<BookingDTO>>> getDriverBookings(HttpServletRequest request) {
-        String token = jwtUtil.extractTokenFromRequest(request);
-        String driverEmail = jwtUtil.extractUsername(token);
-        
-        // Lấy danh sách booking của tài xế
-        List<BookingDTO> bookings = bookingService.getBookingsForDriver(driverEmail);
-        
-        // Phân loại bookings theo trạng thái để cung cấp thông tin thống kê
-        long pendingCount = bookings.stream().filter(b -> b.getStatus() == BookingStatus.PENDING).count();
-        long acceptedCount = bookings.stream().filter(b -> b.getStatus() == BookingStatus.ACCEPTED).count();
-        long completedCount = bookings.stream().filter(b -> 
-                b.getStatus() == BookingStatus.PASSENGER_CONFIRMED || 
-                b.getStatus() == BookingStatus.DRIVER_CONFIRMED || 
-                b.getStatus() == BookingStatus.COMPLETED).count();
-        
-        // Thêm thông tin thống kê về số ghế và doanh thu
-        int totalBookedSeats = bookings.stream()
-                .filter(b -> b.getStatus() != BookingStatus.CANCELLED && b.getStatus() != BookingStatus.REJECTED)
-                .mapToInt(BookingDTO::getSeatsBooked)
-                .sum();
-        
-        BigDecimal totalRevenue = bookings.stream()
-                .filter(b -> b.getStatus() != BookingStatus.CANCELLED && b.getStatus() != BookingStatus.REJECTED)
-                .map(BookingDTO::getTotalPrice)
-                .filter(price -> price != null)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        String message = String.format("Danh sách bookings của tài xế (Chờ xác nhận: %d, Đã chấp nhận: %d, Đã hoàn thành: %d, Tổng ghế đã đặt: %d, Tổng doanh thu: %s)",
-                pendingCount, acceptedCount, completedCount, totalBookedSeats, totalRevenue.toString());
-        
-        return ResponseEntity.ok(new ApiResponse<>(true, message, bookings));
+        try {
+            String token = jwtUtil.extractTokenFromRequest(request);
+            String driverEmail = jwtUtil.extractUsername(token);
+            List<BookingDTO> bookings = bookingService.getBookingsForDriver(driverEmail);
+
+            long pendingCount = bookings.stream().filter(b -> b.getStatus() == BookingStatus.PENDING).count();
+            long acceptedCount = bookings.stream().filter(b -> b.getStatus() == BookingStatus.ACCEPTED).count();
+            long completedCount = bookings.stream().filter(b ->
+                    b.getStatus() == BookingStatus.PASSENGER_CONFIRMED ||
+                            b.getStatus() == BookingStatus.DRIVER_CONFIRMED ||
+                            b.getStatus() == BookingStatus.COMPLETED).count();
+
+            int totalBookedSeats = bookings.stream()
+                    .filter(b -> b.getStatus() != BookingStatus.CANCELLED && b.getStatus() != BookingStatus.REJECTED)
+                    .mapToInt(BookingDTO::getSeatsBooked)
+                    .sum();
+
+            BigDecimal totalRevenue = bookings.stream()
+                    .filter(b -> b.getStatus() != BookingStatus.CANCELLED && b.getStatus() != BookingStatus.REJECTED)
+                    .map(BookingDTO::getTotalPrice)
+                    .filter(price -> price != null)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            String message = String.format("Danh sách bookings của tài xế (Chờ xác nhận: %d, Đã chấp nhận: %d, Đã hoàn thành: %d, Tổng ghế đã đặt: %d, Tổng doanh thu: %s)",
+                    pendingCount, acceptedCount, completedCount, totalBookedSeats, totalRevenue.toString());
+
+            return ResponseEntity.ok(new ApiResponse<>(true, message, bookings));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi lấy danh sách bookings", null));
+        }
     }
 
-    // Chấp nhận chuyến đi
     @PutMapping("/accept/{bookingId}")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<String>> driverAcceptBooking(@PathVariable Long bookingId) {
-        // Lấy thông tin booking trước khi xử lý
-        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
-        if (bookingOpt.isPresent()) {
+        try {
+            Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+            if (bookingOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(false, "Không tìm thấy booking", null));
+            }
+
             Booking booking = bookingOpt.get();
-            
-            // Chấp nhận booking
             bookingService.driverAcceptBooking(bookingId);
-            
-            // Gửi thông báo cho hành khách
+
             notificationService.sendNotification(
-                booking.getPassenger().getEmail(),
-                "Tài xế đã chấp nhận chuyến đi",
-                "Tài xế " + booking.getRides().getDriver().getFullName() + " đã chấp nhận chuyến đi của bạn từ " 
-                    + booking.getRides().getDeparture() + " đến " + booking.getRides().getDestination(),
-                "BOOKING_ACCEPTED",
-                bookingId
+                    booking.getPassenger().getEmail(),
+                    "Tài xế đã chấp nhận chuyến đi",
+                    "Tài xế " + booking.getRides().getDriver().getFullName() + " đã chấp nhận chuyến đi của bạn từ " + booking.getRides().getDeparture() + " đến " + booking.getRides().getDestination(),
+                    "BOOKING_ACCEPTED",
+                    bookingId
             );
-            
+
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã chấp nhận hành khách", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi chấp nhận hành khách", null));
         }
-        
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(new ApiResponse<>(false, "Không tìm thấy booking", null));
     }
 
     @PutMapping("/reject/{bookingId}")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<String>> driverRejectBooking(@PathVariable Long bookingId) {
-        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+        try {
+            Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+            if (bookingOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(false, "Không tìm thấy booking", null));
+            }
 
-        if (bookingOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(false, "Không tìm thấy booking", null));
+            Booking booking = bookingOpt.get();
+            booking.setStatus(BookingStatus.REJECTED);
+            bookingRepository.save(booking);
+
+            notificationService.sendNotification(
+                    booking.getPassenger().getEmail(),
+                    "Tài xế đã từ chối chuyến đi",
+                    "Rất tiếc, tài xế " + booking.getRides().getDriver().getFullName() +
+                            " đã từ chối chuyến đi từ " + booking.getRides().getDeparture() +
+                            " đến " + booking.getRides().getDestination(),
+                    "BOOKING_REJECTED",
+                    booking.getId()
+            );
+
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối hành khách", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi không thể từ chối hành khách", null));
         }
-
-        Booking booking = bookingOpt.get();
-
-        // Cập nhật trạng thái booking
-        booking.setStatus(BookingStatus.REJECTED);
-        bookingRepository.save(booking);
-
-        // Gửi thông báo cho hành khách
-        notificationService.sendNotification(
-                booking.getPassenger().getEmail(),
-                "Tài xế đã từ chối chuyến đi",
-                "Rất tiếc, tài xế " + booking.getRides().getDriver().getFullName() +
-                        " đã từ chối chuyến đi từ " + booking.getRides().getDeparture() +
-                        " đến " + booking.getRides().getDestination(),
-                "BOOKING_REJECTED",
-                booking.getId()
-        );
-
-        return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối hành khách", null));
     }
 
-    // Xác nhận chuyến đi thành công
     @PutMapping("/complete/{rideId}")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<String>> driverMarkCompleted(@PathVariable Long rideId) {
-        // Lấy thông tin các booking của chuyến đi
-        List<Booking> bookings = bookingRepository.findByRidesId(rideId);
-        
-        // Đánh dấu chuyến đi đã hoàn thành
-        bookingService.driverMarkCompleted(rideId);
-        
-        // Gửi thông báo cho tất cả hành khách
-        for (Booking booking : bookings) {
-            notificationService.sendNotification(
-                booking.getPassenger().getEmail(),
-                "Chuyến đi đã hoàn thành",
-                "Tài xế đã xác nhận hoàn thành chuyến đi. Vui lòng xác nhận từ phía bạn để hoàn tất.",
-                "RIDE_COMPLETED",
-                booking.getId()
-            );
-        }
-        
-        return ResponseEntity.ok(new ApiResponse<>(true, "Tài xế đã hoàn thành chuyến đi", null));
-    }
+        try {
+            List<Booking> bookings = bookingRepository.findByRidesId(rideId);
+            bookingService.driverMarkCompleted(rideId);
 
+            for (Booking booking : bookings) {
+                notificationService.sendNotification(
+                        booking.getPassenger().getEmail(),
+                        "Chuyến đi đã hoàn thành",
+                        "Tài xế đã xác nhận hoàn thành chuyến đi. Vui lòng xác nhận từ phía bạn để hoàn tất.",
+                        "RIDE_COMPLETED",
+                        booking.getId()
+                );
+            }
+
+            return ResponseEntity.ok(new ApiResponse<>(true, "Tài xế đã hoàn thành chuyến đi", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi xác nhận chuyến đi", null));
+        }
+    }
 
 
 }

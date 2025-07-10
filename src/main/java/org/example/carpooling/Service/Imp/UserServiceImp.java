@@ -8,6 +8,7 @@ import org.example.carpooling.Exception.GlobalException;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Repository.RoleRepository;
 import org.example.carpooling.Repository.UserRepository;
+import org.example.carpooling.Service.FileService;
 import org.example.carpooling.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -37,7 +38,7 @@ public class UserServiceImp implements UserService {
     RoleRepository roleRepository;
 
     @Autowired
-    FileServiceImp fileServiceImp;
+    FileService fileService;
 
 
     @Override
@@ -54,7 +55,7 @@ public class UserServiceImp implements UserService {
         }
 
         if (avatarImage != null && !avatarImage.isEmpty()) {
-            String savedAvatar = fileServiceImp.saveFile(avatarImage);
+            String savedAvatar = fileService.saveFile(avatarImage);
             if (savedAvatar != null) {
                 user.setAvatarImage(savedAvatar);
             }
@@ -85,21 +86,21 @@ public class UserServiceImp implements UserService {
 
         }
         if (avatarImage != null && !avatarImage.isEmpty()) {
-            String savedAvatar = fileServiceImp.saveFile(avatarImage);
+            String savedAvatar = fileService.saveFile(avatarImage);
             if (savedAvatar != null) {
                 user.setAvatarImage(savedAvatar);
             }
         }
 
         if (licenseImage != null && !licenseImage.isEmpty()) {
-            String savedLicense = fileServiceImp.saveFile(licenseImage);
+            String savedLicense = fileService.saveFile(licenseImage);
             if (savedLicense != null) {
                 user.setLicenseImageUrl(savedLicense);
             }
         }
 
         if (vehicleImage != null && !vehicleImage.isEmpty()) {
-            String savedVehicle = fileServiceImp.saveFile(vehicleImage);
+            String savedVehicle = fileService.saveFile(vehicleImage);
             if (savedVehicle != null) {
                 user.setVehicleImageUrl(savedVehicle);
             }
@@ -199,7 +200,7 @@ public class UserServiceImp implements UserService {
                                     user.getStatus()
                             );
                         case "PASSENGER":
-                            return new UserDTO(user, fileServiceImp); // 👈 constructor mới
+                            return new UserDTO(user, fileService); // 👈 constructor mới
                         default:
                             throw new IllegalArgumentException("Unknown role: " + role);
                     }
@@ -237,9 +238,9 @@ public class UserServiceImp implements UserService {
         return new DriverDTO(
                 user.getId(),
                 user.getStatus(),
-                fileServiceImp.generateFileUrl(user.getLicenseImageUrl()),
-                fileServiceImp.generateFileUrl(user.getVehicleImageUrl()),
-                fileServiceImp.generateFileUrl(user.getAvatarImage()),
+                fileService.generateFileUrl(user.getLicenseImageUrl()),
+                fileService.generateFileUrl(user.getVehicleImageUrl()),
+                fileService.generateFileUrl(user.getAvatarImage()),
                 user.getFullName(),
                 user.getEmail(),
                 user.getPhone(),

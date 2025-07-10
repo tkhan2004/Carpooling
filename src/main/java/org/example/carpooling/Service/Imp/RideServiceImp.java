@@ -10,6 +10,7 @@ import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Repository.BookingRepository;
 import org.example.carpooling.Repository.RideRepository;
 import org.example.carpooling.Repository.UserRepository;
+import org.example.carpooling.Service.BookingService;
 import org.example.carpooling.Service.RideService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,8 +31,7 @@ public class RideServiceImp implements RideService {
 
     @Autowired
     BookingRepository bookingRepository;
-    @Autowired
-    BookingServiceImp bookingServiceImp;
+
 
     private final UserRepository userRepository;
     private final RideRepository rideRepository;

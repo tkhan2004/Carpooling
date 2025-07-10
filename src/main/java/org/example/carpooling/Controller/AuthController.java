@@ -30,6 +30,7 @@ public class AuthController {
     @Autowired
     UserService userService;
 
+
     @Autowired
     UserRepository userRepository;
 
@@ -44,58 +45,43 @@ public class AuthController {
 
     @Autowired
     FileService fileService;
-    @Autowired
-    private FileServiceImp fileServiceImp;
 
-    @PostMapping(
-    value = "/passenger-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/passenger-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<UserDTO>> passengerRegister(
+            @RequestParam String email,
+            @RequestParam @Valid String password,
+            @RequestParam String fullName,
+            @RequestParam String phone,
+            @RequestPart(value = "avatarImage", required = false) MultipartFile avatarImage) {
 
-    public ResponseEntity<ApiResponse<UserDTO>> passengerRegister( @RequestParam String email,
-                                               @RequestParam @Valid String password,
-                                               @RequestParam String fullName,
-                                               @RequestParam String phone,
-                                               @RequestPart(value = "avatarImage", required = false) MultipartFile avatarImage){
-        email = email.trim().replaceAll(",$", "");  // Ví dụ: "khachhang5@gmail.com," -> "khachhang5@gmail.com"
-        fullName = fullName.trim().replaceAll(",$", ""); // "Sakura," -> "Sakura"
-        phone = phone.trim().replaceAll(",$", "").replaceAll(" ", ""); // "123457689 ," -> "123457689"
-        password = password.trim().replaceAll(",$", "").replaceAll(" ", ""); // "123457689 ," -> "123457689"
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail(email.trim());
-        request.setPassword(password.trim());
-        request.setFullName(fullName.trim());
-        request.setPhone(phone);
         try {
+            email = email.trim().replaceAll(",$", "");
+            fullName = fullName.trim().replaceAll(",$", "");
+            phone = phone.trim().replaceAll(",$", "").replaceAll(" ", "");
+            password = password.trim().replaceAll(",$", "").replaceAll(" ", "");
+
+            RegisterRequest request = new RegisterRequest();
+            request.setEmail(email);
+            request.setPassword(password);
+            request.setFullName(fullName);
+            request.setPhone(phone);
+
             Users registeredUser = userService.passengerRegister(request, avatarImage);
             UserDTO userDTO = new UserDTO(registeredUser, fileService);
-            // Trường hợp thành công
-            ApiResponse<UserDTO> successResponse = new ApiResponse<>(
-                    true,
-                    "Đăng ký thành công",
-                    userDTO
-            );
-            return ResponseEntity.ok(successResponse);
+
+            ApiResponse<UserDTO> successResponse = new ApiResponse<>(true, "Đăng ký thành công", userDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(successResponse);
 
         } catch (GlobalException ex) {
-            // Trường hợp email trùng
-            ApiResponse<?> errorResponse = new ApiResponse<>(
-                    false,
-                    ex.getMessage(),
-                    null
-            );
-            return ResponseEntity.status(HttpStatus.CONFLICT).body((ApiResponse<UserDTO>) errorResponse);
-
+            ApiResponse<UserDTO> errorResponse = new ApiResponse<>(false, ex.getMessage(), null);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         } catch (Exception ex) {
-            // Trường hợp lỗi khác
-            ApiResponse<?> errorResponse = new ApiResponse<>(
-                    false,
-                    "Đăng ký thất bại: " + ex.getMessage(),
-                    null
-            );
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((ApiResponse<UserDTO>) errorResponse);
+            ApiResponse<UserDTO> errorResponse = new ApiResponse<>(false, "Đăng ký thất bại: " + ex.getMessage(), null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
-    }// Đăng ký
+    }
 
-    @PostMapping(value = "/driver-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
+    @PostMapping(value = "/driver-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<DriverDTO>> driverRegister(
             @RequestParam String email,
             @RequestParam @Valid String password,
@@ -105,20 +91,17 @@ public class AuthController {
             @RequestPart(value = "licenseImage", required = false) MultipartFile licenseImage,
             @RequestPart(value = "vehicleImage", required = false) MultipartFile vehicleImage) {
 
-        // Xử lý trim() như cũ
-        email = email.trim().replaceAll(",$", "");
-        // ... (các xử lý trim khác)
-
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail(email);
-        request.setPassword(password);
-        request.setFullName(fullName);
-        request.setPhone(phone);
-
         try {
+            email = email.trim().replaceAll(",$", "");
+
+            RegisterRequest request = new RegisterRequest();
+            request.setEmail(email);
+            request.setPassword(password);
+            request.setFullName(fullName);
+            request.setPhone(phone);
+
             Users registeredUser = userService.driverRegister(request, avatarImage, licenseImage, vehicleImage);
 
-            // Chuyển đổi sang DriverDTO
             DriverDTO driverDTO = new DriverDTO(
                     registeredUser.getId(),
                     registeredUser.getStatus(),
@@ -131,27 +114,14 @@ public class AuthController {
                     registeredUser.getRole().getName()
             );
 
-            ApiResponse<DriverDTO> successResponse = new ApiResponse<>(
-                    true,
-                    "Đăng ký thành công",
-                    driverDTO
-            );
-            return ResponseEntity.ok(successResponse);
+            ApiResponse<DriverDTO> successResponse = new ApiResponse<>(true, "Đăng ký thành công", driverDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(successResponse);
 
         } catch (GlobalException ex) {
-            // Xử lý lỗi như cũ
-            ApiResponse<DriverDTO> errorResponse = new ApiResponse<>(
-                    false,
-                    ex.getMessage(),
-                    null
-            );
+            ApiResponse<DriverDTO> errorResponse = new ApiResponse<>(false, ex.getMessage(), null);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         } catch (Exception ex) {
-            ApiResponse<DriverDTO> errorResponse = new ApiResponse<>(
-                    false,
-                    "Đăng ký thất bại: " + ex.getMessage(),
-                    null
-            );
+            ApiResponse<DriverDTO> errorResponse = new ApiResponse<>(false, "Đăng ký thất bại: " + ex.getMessage(), null);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
@@ -159,43 +129,30 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<?>> login(@RequestBody LoginRequest request) {
         try {
-            // 1. Xác thực email + password
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getEmail(),
-                             request.getPassword()
+                            request.getPassword()
                     )
             );
 
-            // 2. Lấy user từ DB
             Optional<Users> optionalUser = userRepository.findByEmail(request.getEmail());
             if (!optionalUser.isPresent()) {
-                ApiResponse<Users> successResponse = new ApiResponse<>(false,"Người dùng không tồn tại",null);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(successResponse);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse<>(false, "Người dùng không tồn tại", null));
             }
 
             Users user = optionalUser.get();
-
-            // 3. Sinh token
             String token = jwtUtil.generateToken(user.getEmail(), user.getRole().getName());
-            // 4. Trả response
-            LoginResponse loginResponse = new LoginResponse(token,user.getEmail(),user.getRole().getName());
-            ApiResponse<LoginResponse> successResponse = new ApiResponse<>(true,"Đang nhập thành công", loginResponse);
+            LoginResponse loginResponse = new LoginResponse(token, user.getEmail(), user.getRole().getName());
+            ApiResponse<LoginResponse> successResponse = new ApiResponse<>(true, "Đăng nhập thành công", loginResponse);
             return ResponseEntity.ok(successResponse);
 
-        }
-
-        catch (Exception e) {
-
-
-//            byte[] key = Keys.secretKeyFor(SignatureAlgorithm.HS256).getEncoded();
-//            String base64Key = Base64.getEncoder().encodeToString(key);
-//            System.out.println("JWT Secret Key (Base64): " + base64Key);
-//            => xin key
+        } catch (Exception e) {
             ApiResponse<String> errorResponse = new ApiResponse<>(false, "Đăng nhập thất bại: " + e.getMessage(), null);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);        }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
     }
-
 
 
 }

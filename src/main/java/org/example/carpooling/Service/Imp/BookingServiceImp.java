@@ -11,6 +11,7 @@ import org.example.carpooling.Repository.BookingRepository;
 import org.example.carpooling.Repository.RideRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.BookingService;
+import org.example.carpooling.Service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,7 @@ public class BookingServiceImp implements BookingService {
     BookingRepository bookingRepository;
 
     @Autowired
-    FileServiceImp fileService;
+    FileService fileService;
 
     // Khách book
     @Override
