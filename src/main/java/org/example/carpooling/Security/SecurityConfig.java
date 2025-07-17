@@ -68,8 +68,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // This protects /api/admin/user
                         .requestMatchers("/api/driver/**").hasRole("DRIVER")
                         .requestMatchers("/api/passenger/**").hasRole("PASSENGER")
-                        // Add other permitAll endpoints if needed (e.g., swagger-ui)
-                        // .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // Swagger UI and OpenAPI endpoints
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated() // All other requests need authentication
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -90,7 +90,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With"));
         // Dòng này quan trọng - thay đổi thành false
         configuration.setAllowCredentials(false);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         // Apply this configuration to all paths - you can restrict it if needed e.g., "/api/**"
         source.registerCorsConfiguration("/**", configuration);
