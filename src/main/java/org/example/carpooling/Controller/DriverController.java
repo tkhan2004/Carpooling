@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.example.carpooling.Dto.BookingDTO;
 import org.example.carpooling.Dto.DriverDTO;
 import org.example.carpooling.Dto.RideRequestDTO;
-import org.example.carpooling.Dto.UserDTO;
 import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Status.BookingStatus;
 import org.example.carpooling.Entity.Users;
@@ -14,8 +13,6 @@ import org.example.carpooling.Repository.BookingRepository;
 import org.example.carpooling.Repository.RideRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.*;
-import org.example.carpooling.Service.Imp.BookingServiceImp;
-import org.example.carpooling.Service.Imp.FileServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +28,6 @@ import java.util.Optional;
 public class DriverController {
     @Autowired
     JwtUtil jwtUtil;
-
 
     @Autowired
     UserRepository userRepository;

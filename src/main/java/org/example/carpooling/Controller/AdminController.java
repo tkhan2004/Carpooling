@@ -45,6 +45,7 @@ public class AdminController {
     @GetMapping("/user/role")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<?>>> getAlUser(@RequestParam(required = false) String role) {
+
         try {
             List<?> result = userService.getUsersByRole(role);
             return ResponseEntity.ok(new ApiResponse<>(true, "Lấy danh sách người dùng thành công", result));

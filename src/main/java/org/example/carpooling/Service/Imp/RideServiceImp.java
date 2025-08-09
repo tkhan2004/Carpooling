@@ -1,47 +1,33 @@
 package org.example.carpooling.Service.Imp;
 
 import org.example.carpooling.Dto.RideRequestDTO;
-import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Rides;
-import org.example.carpooling.Entity.Status.BookingStatus;
 import org.example.carpooling.Entity.Status.DriverStatus;
 import org.example.carpooling.Entity.Status.RideStatus;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Repository.BookingRepository;
 import org.example.carpooling.Repository.RideRepository;
 import org.example.carpooling.Repository.UserRepository;
-import org.example.carpooling.Service.BookingService;
 import org.example.carpooling.Service.RideService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.example.carpooling.Entity.Status.DriverStatus.PENDING;
-
 @Service
-public class RideServiceImp implements RideService {
+    public class RideServiceImp implements RideService {
 
     @Autowired
     BookingRepository bookingRepository;
 
-
-    private final UserRepository userRepository;
-    private final RideRepository rideRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
-    public RideServiceImp(UserRepository userRepository, RideRepository rideRepository) {
-        this.userRepository = userRepository;
-        this.rideRepository = rideRepository;
-
-    }
+    private  RideRepository rideRepository;
 
     @Override
     public void createRide(RideRequestDTO rideRequest, String email) {
