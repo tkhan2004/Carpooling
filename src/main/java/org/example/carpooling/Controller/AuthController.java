@@ -1,13 +1,13 @@
 package org.example.carpooling.Controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import org.example.carpooling.Dto.*;
 import org.example.carpooling.Entity.Users;
+import org.example.carpooling.Entity.Vehicle;
 import org.example.carpooling.Exception.GlobalException;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Payload.ApiResponse;
 import org.example.carpooling.Repository.UserRepository;
-import org.example.carpooling.Service.FileService;
-import org.example.carpooling.Service.Imp.FileServiceImp;
 import org.example.carpooling.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,7 +30,6 @@ public class AuthController {
     @Autowired
     UserService userService;
 
-
     @Autowired
     UserRepository userRepository;
 
@@ -43,8 +42,6 @@ public class AuthController {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-    @Autowired
-    FileService fileService;
 
     @PostMapping(value = "/passenger-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<UserDTO>> passengerRegister(
@@ -60,14 +57,11 @@ public class AuthController {
             phone = phone.trim().replaceAll(",$", "").replaceAll(" ", "");
             password = password.trim().replaceAll(",$", "").replaceAll(" ", "");
 
-            RegisterRequest request = new RegisterRequest();
-            request.setEmail(email);
-            request.setPassword(password);
-            request.setFullName(fullName);
-            request.setPhone(phone);
 
-            Users registeredUser = userService.passengerRegister(request, avatarImage);
-            UserDTO userDTO = new UserDTO(registeredUser, fileService);
+            Users registeredUser = userService.passengerRegister(email, password, fullName, phone, avatarImage);
+            UserDTO userDTO = UserDTO.builder()
+                    .email(registeredUser.getEmail())
+                    .fullName(registeredUser.getFullName()).build();
 
             ApiResponse<UserDTO> successResponse = new ApiResponse<>(true, "Đăng ký thành công", userDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(successResponse);
@@ -83,36 +77,46 @@ public class AuthController {
 
     @PostMapping(value = "/driver-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<DriverDTO>> driverRegister(
-            @RequestParam String email,
-            @RequestParam @Valid String password,
-            @RequestParam String fullName,
-            @RequestParam String phone,
+            @RequestParam("email") String email,
+            @RequestParam("phone") String phone,
+            @RequestParam("password") String password,
+            @RequestParam("fullName") String fullName,
+            @RequestParam("licensePlate") String licensePlate,
+            @RequestParam("brand") String brand,
+            @RequestParam("model") String model,
+            @RequestParam("color") String color,
+            @RequestParam("numberOfSeats") Integer numberOfSeats,
             @RequestPart(value = "avatarImage", required = false) MultipartFile avatarImage,
             @RequestPart(value = "licenseImage", required = false) MultipartFile licenseImage,
-            @RequestPart(value = "vehicleImage", required = false) MultipartFile vehicleImage) {
-
+            @RequestPart(value = "vehicleImage", required = false) MultipartFile vehicleImage
+    ) {
         try {
-            email = email.trim().replaceAll(",$", "");
-
-            RegisterRequest request = new RegisterRequest();
-            request.setEmail(email);
-            request.setPassword(password);
-            request.setFullName(fullName);
-            request.setPhone(phone);
-
-            Users registeredUser = userService.driverRegister(request, avatarImage, licenseImage, vehicleImage);
-
-            DriverDTO driverDTO = new DriverDTO(
-                    registeredUser.getId(),
-                    registeredUser.getStatus(),
-                    fileService.generateFileUrl(registeredUser.getLicenseImageUrl()),
-                    fileService.generateFileUrl(registeredUser.getVehicleImageUrl()),
-                    fileService.generateFileUrl(registeredUser.getAvatarImage()),
-                    registeredUser.getFullName(),
-                    registeredUser.getEmail(),
-                    registeredUser.getPhone(),
-                    registeredUser.getRole().getName()
+            // Gọi service đăng ký
+            Users registeredUser = userService.driverRegister(
+                    email, phone, password, fullName,
+                    licensePlate, brand, model, color, numberOfSeats,
+                    avatarImage, licenseImage, vehicleImage
             );
+            Vehicle vehicle = null;
+            if ( registeredUser.getVehicles() != null && !registeredUser.getVehicles().isEmpty()){
+                vehicle = registeredUser.getVehicles().get(0);
+            }
+
+           DriverDTO driverDTO =DriverDTO.builder()
+                                        .id(registeredUser.getId())
+                                        .status(registeredUser.getStatus())
+                                        .avatarImage(registeredUser.getAvatarImage())
+                                        .fullName(registeredUser.getFullName())
+                                        .email(registeredUser.getEmail())
+                                        .phoneNumber(registeredUser.getPhone())
+                                        .licensePlate(vehicle != null ? vehicle.getLicensePlate() : null)
+                                        .brand(vehicle != null ? vehicle.getBrand() : null)
+                                        .model(vehicle != null ? vehicle.getModel() : null)
+                                        .color(vehicle != null ? vehicle.getColor() : null)
+                                        .numberOfSeats(vehicle != null ? vehicle.getNumberOfSeats() : null)
+                                        .vehicleImageUrl(vehicle != null ? vehicle.getVehicleImageUrl() : null)
+                                        .licenseImageUrl(vehicle != null ? vehicle.getLicenseImageUrl() : null)
+                                        .build();
 
             ApiResponse<DriverDTO> successResponse = new ApiResponse<>(true, "Đăng ký thành công", driverDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(successResponse);

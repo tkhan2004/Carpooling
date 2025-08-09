@@ -46,13 +46,13 @@ public class UserServiceImp implements UserService {
 
 
     @Override
-    public Users passengerRegister(RegisterRequest request,
+    public Users passengerRegister(String email, String phone, String password, String fullName,
                                    MultipartFile avatarImage) {
         Users user = new Users();
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setPhone(phone);
+        user.setPassword(passwordEncoder.encode(password));
         user.setStatus(null);
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new RuntimeException("Email này đã tồn tại");
@@ -79,21 +79,23 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public Users driverRegister(RegisterRequest request,
+    public Users driverRegister(String email, String phone, String password, String fullName,
+                                String licensePlate, String brand, String model, String color, Integer numberOfSeats,
                                 MultipartFile avatarImage,
                                 MultipartFile licenseImage,
                                 MultipartFile vehicleImage) {
 
         Users user = new Users();
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setPhone(phone);
+        user.setPassword(passwordEncoder.encode(password));
+
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new RuntimeException("Email này đã tồn tại");
-
         }
 
+        // Upload avatar
         if (avatarImage != null && !avatarImage.isEmpty()) {
             try {
                 Map<String, String> avatarData = cloudinaryService.upLoadFile(avatarImage);
@@ -104,42 +106,46 @@ public class UserServiceImp implements UserService {
             }
         }
 
+        // Tạo vehicle
         Vehicle vehicle = new Vehicle();
-        vehicle.setBrand(request.getBrand());
-        vehicle.setColor(request.getColor());
-        vehicle.setModel(request.getModel());
-        vehicle.setLicensePlate(request.getLicensePlate());
-        vehicle.setNumberOfSeats(request.getNumberOfSeats());
+        vehicle.setBrand(brand);
+        vehicle.setColor(color);
+        vehicle.setModel(model);
+        vehicle.setLicensePlate(licensePlate);
+        vehicle.setNumberOfSeats(numberOfSeats);
 
+        // Upload license image
         if (licenseImage != null && !licenseImage.isEmpty()) {
             try {
-                Map<String, String> LicenseData = cloudinaryService.upLoadFile(licenseImage);
-                user.setAvatarImage(LicenseData.get("url"));
-                user.setAvatarImagePublicId(LicenseData.get("publicId"));
+                Map<String, String> licenseData = cloudinaryService.upLoadFile(licenseImage);
+                vehicle.setLicenseImageUrl(licenseData.get("url")); // ✅ set vào vehicle
+                vehicle.setLicenseImagePublicId(licenseData.get("publicId"));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
 
+        // Upload vehicle image
         if (vehicleImage != null && !vehicleImage.isEmpty()) {
             try {
                 Map<String, String> vehicleData = cloudinaryService.upLoadFile(vehicleImage);
-                user.setAvatarImage(vehicleData.get("url"));
-                user.setAvatarImagePublicId(vehicleData.get("publicId"));
+                vehicle.setVehicleImageUrl(vehicleData.get("url")); // ✅ set vào vehicle
+                vehicle.setVehicleImagePublicId(vehicleData.get("publicId"));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
 
-        // Set driver role
+        // Set role
         Role driverRole = roleRepository.findById(2L)
                 .orElseThrow(() -> new RuntimeException("Driver role not found"));
         user.setRole(driverRole);
 
         // Gán quan hệ
         vehicle.setDriver(user);
-        user.setVehicles(Arrays.asList(vehicle));
-        return userRepository.save(user);
+        user.setVehicles(Collections.singletonList(vehicle));
+
+        return userRepository.save(user); // Hibernate cascade sẽ lưu cả vehicle
     }
 
     @Override

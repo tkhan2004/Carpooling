@@ -11,8 +11,6 @@ import org.example.carpooling.Payload.ApiResponse;
 import org.example.carpooling.Repository.BookingRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.BookingService;
-import org.example.carpooling.Service.FileService;
-import org.example.carpooling.Service.Imp.FileServiceImp;
 import org.example.carpooling.Service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -42,8 +40,6 @@ public class PassengerController {
     @Autowired
     NotificationService notificationService;
 
-    @Autowired
-    FileService fileService;
 
     @GetMapping("/bookings")
     @PreAuthorize("hasRole('PASSENGER')")
@@ -82,7 +78,13 @@ public class PassengerController {
             }
 
             Users user = users.get();
-            UserDTO userDTO = new UserDTO(user, fileService);
+            UserDTO userDTO = UserDTO.builder()
+                    .id(user.getId())
+                    .email(user.getEmail())
+                    .fullName(user.getFullName())
+                    .phoneNumber(user.getPhone())
+                    .role(user.getRole().getName())
+                    .build();
             return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Thông tin người dùng", userDTO));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi lấy thông tin người dùng", null));
@@ -159,7 +161,7 @@ public class PassengerController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>(false, "Bạn không có quyền truy cập booking này", null));
             }
 
-            BookingDTO dto = new BookingDTO(booking, fileService);
+            BookingDTO dto = new BookingDTO(booking);
             String message;
             switch (dto.getStatus()) {
                 case PENDING:

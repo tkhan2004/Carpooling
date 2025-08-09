@@ -2,6 +2,7 @@ package org.example.carpooling.Controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.carpooling.Dto.ChangePassDTO;
+import org.example.carpooling.Dto.UserUpdateRequestDTO;
 import org.example.carpooling.Dto.UserUpdateResponseDTO;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Helper.JwtUtil;
@@ -42,39 +43,26 @@ public class UserController
     @PutMapping("/update-profile")
     @PreAuthorize("hasAnyRole('DRIVER', 'PASSENGER')")
     public ResponseEntity<ApiResponse<?>> updateProfile(
-            @RequestParam("fullName") String fullName,
-            @RequestParam("phone") String phone,
-            @RequestParam(value = "avatarImage", required = false) MultipartFile avatarImage,
-            @RequestParam(value = "licenseImage", required = false) MultipartFile licenseImage,
-            @RequestParam(value = "vehicleImage", required = false) MultipartFile vehicleImage,
+            @RequestPart UserUpdateRequestDTO userUpdateRequestDTO,
             HttpServletRequest request) {
+
         try {
             String token = jwtUtil.extractTokenFromRequest(request);
             String email = jwtUtil.extractUsername(token);
             Optional<Users> optionalUser = userService.findByEmail(email);
 
             if (optionalUser.isEmpty()) {
-                ApiResponse<Object> response = new ApiResponse<>(false, "Không tìm thấy người dùng", null);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(false, "Không tìm thấy người dùng", null));
             }
 
             Users user = optionalUser.get();
-            UserUpdateResponseDTO userUpdateDTO = new UserUpdateResponseDTO();
-            userUpdateDTO.setFullName(fullName);
-            userUpdateDTO.setPhone(phone);
 
-            // ✅ LUÔN SET avatar cho mọi user
-            userUpdateDTO.setAvatarImage(avatarImage);
+            // Gọi service update
+            userService.updateProfile(token,userUpdateRequestDTO);
 
-            // ✅ CHỈ tài xế mới set license/vehicle
-            if (user.getRole() != null && "DRIVER".equalsIgnoreCase(user.getRole().getName())) {
-                userUpdateDTO.setLicenseImageUrl(licenseImage);
-                userUpdateDTO.setVehicleImageUrl(vehicleImage);
-            }
+            return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật hồ sơ thành công", null));
 
-            String message = userService.updateProfile(token, userUpdateDTO);
-            ApiResponse<Object> response = new ApiResponse<>(true, message, null);
-            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse<>(false, "Cập nhật hồ sơ thất bại: " + e.getMessage(), null));

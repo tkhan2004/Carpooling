@@ -50,9 +50,6 @@ public class DriverController {
     @Autowired
     NotificationService notificationService;
 
-    @Autowired
-    FileService fileService;
-
     @GetMapping("/profile")
     @PreAuthorize("hasAnyRole('DRIVER')")
     public ResponseEntity<?> getProfile(HttpServletRequest request) {

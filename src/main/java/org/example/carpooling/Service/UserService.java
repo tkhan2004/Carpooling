@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
-    Users passengerRegister(RegisterRequest registerRequest,MultipartFile avatarImage);
-    Users driverRegister(RegisterRequest registerRequest, MultipartFile avatarImage,
+    Users passengerRegister(String email, String phone, String password, String fullName, MultipartFile avatarImage);
+    Users driverRegister(String email, String phone, String password, String fullName,
+                         String licensePlate, String brand, String model, String color,Integer numberOfSeats,
+                         MultipartFile avatarImage,
                          MultipartFile licenseImage,
                          MultipartFile vehicleImage);
     Optional<Users> findByEmail(String email);
