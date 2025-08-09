@@ -2,23 +2,18 @@ package org.example.carpooling.Controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.carpooling.Dto.ChangePassDTO;
-import org.example.carpooling.Dto.RideRequestDTO;
-import org.example.carpooling.Dto.UserDTO;
-import org.example.carpooling.Dto.UserUpdateDTO;
+import org.example.carpooling.Dto.UserUpdateResponseDTO;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Payload.ApiResponse;
-import org.example.carpooling.Service.Imp.UserServiceImp;
 import org.example.carpooling.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -64,7 +59,7 @@ public class UserController
             }
 
             Users user = optionalUser.get();
-            UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
+            UserUpdateResponseDTO userUpdateDTO = new UserUpdateResponseDTO();
             userUpdateDTO.setFullName(fullName);
             userUpdateDTO.setPhone(phone);
 

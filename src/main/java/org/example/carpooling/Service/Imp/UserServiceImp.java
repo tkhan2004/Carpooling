@@ -4,11 +4,12 @@ import org.example.carpooling.Dto.*;
 import org.example.carpooling.Entity.Role;
 import org.example.carpooling.Entity.Status.DriverStatus;
 import org.example.carpooling.Entity.Users;
-import org.example.carpooling.Exception.GlobalException;
+import org.example.carpooling.Entity.Vehicle;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Repository.RoleRepository;
 import org.example.carpooling.Repository.UserRepository;
-import org.example.carpooling.Service.FileService;
+import org.example.carpooling.Repository.VehicleRepository;
+import org.example.carpooling.Service.CloudinaryService;
 import org.example.carpooling.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -38,7 +39,10 @@ public class UserServiceImp implements UserService {
     RoleRepository roleRepository;
 
     @Autowired
-    FileService fileService;
+    private CloudinaryService cloudinaryService;
+
+    @Autowired
+    private VehicleRepository vehicleRepository;
 
 
     @Override
@@ -55,11 +59,15 @@ public class UserServiceImp implements UserService {
         }
 
         if (avatarImage != null && !avatarImage.isEmpty()) {
-            String savedAvatar = fileService.saveFile(avatarImage);
-            if (savedAvatar != null) {
-                user.setAvatarImage(savedAvatar);
+            try {
+                Map<String, String> avatarData = cloudinaryService.upLoadFile(avatarImage);
+                user.setAvatarImage(avatarData.get("url"));
+                user.setAvatarImagePublicId(avatarData.get("publicId"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
+
         // Lấy role từ DB
         Role driverRole = roleRepository.findById(3L)
                 .orElseThrow(() -> new RuntimeException("Driver role not found"));
@@ -85,24 +93,41 @@ public class UserServiceImp implements UserService {
             throw new RuntimeException("Email này đã tồn tại");
 
         }
+
         if (avatarImage != null && !avatarImage.isEmpty()) {
-            String savedAvatar = fileService.saveFile(avatarImage);
-            if (savedAvatar != null) {
-                user.setAvatarImage(savedAvatar);
+            try {
+                Map<String, String> avatarData = cloudinaryService.upLoadFile(avatarImage);
+                user.setAvatarImage(avatarData.get("url"));
+                user.setAvatarImagePublicId(avatarData.get("publicId"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
 
+        Vehicle vehicle = new Vehicle();
+        vehicle.setBrand(request.getBrand());
+        vehicle.setColor(request.getColor());
+        vehicle.setModel(request.getModel());
+        vehicle.setLicensePlate(request.getLicensePlate());
+        vehicle.setNumberOfSeats(request.getNumberOfSeats());
+
         if (licenseImage != null && !licenseImage.isEmpty()) {
-            String savedLicense = fileService.saveFile(licenseImage);
-            if (savedLicense != null) {
-                user.setLicenseImageUrl(savedLicense);
+            try {
+                Map<String, String> LicenseData = cloudinaryService.upLoadFile(licenseImage);
+                user.setAvatarImage(LicenseData.get("url"));
+                user.setAvatarImagePublicId(LicenseData.get("publicId"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
 
         if (vehicleImage != null && !vehicleImage.isEmpty()) {
-            String savedVehicle = fileService.saveFile(vehicleImage);
-            if (savedVehicle != null) {
-                user.setVehicleImageUrl(savedVehicle);
+            try {
+                Map<String, String> vehicleData = cloudinaryService.upLoadFile(vehicleImage);
+                user.setAvatarImage(vehicleData.get("url"));
+                user.setAvatarImagePublicId(vehicleData.get("publicId"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
 
@@ -111,6 +136,9 @@ public class UserServiceImp implements UserService {
                 .orElseThrow(() -> new RuntimeException("Driver role not found"));
         user.setRole(driverRole);
 
+        // Gán quan hệ
+        vehicle.setDriver(user);
+        user.setVehicles(Arrays.asList(vehicle));
         return userRepository.save(user);
     }
 
@@ -140,7 +168,7 @@ public class UserServiceImp implements UserService {
 
     // UserServiceImp.java
     @Override
-    public String updateProfile(String token, UserUpdateDTO userUpdateDTO) {
+    public String updateProfile(String token, UserUpdateRequestDTO userUpdateDTO) throws IOException {
         String email = jwtUtil.extractUsername(token);
         Optional<Users> optionalUser = userRepository.findByEmail(email);
 
@@ -152,36 +180,62 @@ public class UserServiceImp implements UserService {
         user.setFullName(userUpdateDTO.getFullName());
         user.setPhone(userUpdateDTO.getPhone());
 
+
+
         // ✅ Update avatar cho mọi user
-        MultipartFile avatarFile = userUpdateDTO.getAvatarImage();
+        MultipartFile avatarFile = userUpdateDTO.getAvatarImageUrl();
         if (avatarFile != null && !avatarFile.isEmpty()) {
-            saveImage(avatarFile, "avatar", user);
+            // Xoá ảnh cũ
+            if (user.getAvatarImagePublicId() != null) {
+                cloudinaryService.deleteFile(user.getAvatarImagePublicId());
+            }
+
+            // Upload ảnh mới
+            Map<String, String> avatarData = cloudinaryService.upLoadFile(avatarFile);
+            user.setAvatarImage(avatarData.get("url"));
+            user.setAvatarImagePublicId(avatarData.get("publicId"));
         }
 
         // ✅ Nếu là DRIVER thì update license & vehicle
-        if (user.getRole().getName().equalsIgnoreCase("DRIVER")) {
-            boolean updated = false;
+        if ("DRIVER".equalsIgnoreCase(user.getRole().getName())) {
+            Vehicle vehicle = vehicleRepository.findByDriverId(user.getId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin xe"));
 
-            MultipartFile licenseFile = userUpdateDTO.getLicenseImageUrl();
-            if (licenseFile != null && !licenseFile.isEmpty()) {
-                saveImage(licenseFile, "license", user);
-                updated = true;
+            boolean needApproval = false;
+
+            // Update license image
+            if (userUpdateDTO.getLicenseImageUrl() != null && !userUpdateDTO.getLicenseImageUrl().isEmpty()) {
+                if (vehicle.getLicenseImagePublicId() != null) {
+                    cloudinaryService.deleteFile(vehicle.getLicenseImagePublicId());
+                }
+                Map<String, String> licenseData = cloudinaryService.upLoadFile(userUpdateDTO.getLicenseImageUrl());
+                vehicle.setLicenseImageUrl(licenseData.get("url"));
+                vehicle.setLicenseImagePublicId(licenseData.get("publicId"));
+                needApproval = true;
             }
 
-            MultipartFile vehicleFile = userUpdateDTO.getVehicleImageUrl();
-            if (vehicleFile != null && !vehicleFile.isEmpty()) {
-                saveImage(vehicleFile, "vehicle", user);
-                updated = true;
+            // Update vehicle image
+            if (userUpdateDTO.getVehicleImageUrl() != null && !userUpdateDTO.getVehicleImageUrl().isEmpty()) {
+                if (vehicle.getVehicleImagePublicId() != null) {
+                    cloudinaryService.deleteFile(vehicle.getVehicleImagePublicId());
+                }
+                Map<String, String> vehicleData = cloudinaryService.upLoadFile(userUpdateDTO.getVehicleImageUrl());
+                vehicle.setVehicleImageUrl(vehicleData.get("url"));
+                vehicle.setVehicleImagePublicId(vehicleData.get("publicId"));
+                needApproval = true;
             }
 
-            // ✅ Nếu có cập nhật ảnh license/vehicle → cần duyệt lại
-            if (updated) {
+            // Nếu có thay đổi ảnh giấy tờ → set trạng thái PENDING
+            if (needApproval) {
                 user.setStatus(DriverStatus.PENDING);
             }
+
+            vehicleRepository.save(vehicle);
         }
 
         userRepository.save(user);
         return "Cập nhật thành công";
+
     }
 
     @Override
@@ -191,16 +245,35 @@ public class UserServiceImp implements UserService {
                 .map(user -> {
                     switch (role.toUpperCase()) {
                         case "DRIVER":
-                            return new DriverDTO(
-                                    user.getId(),
-                                    user.getFullName(),
-                                    user.getEmail(),
-                                    user.getPhone(),
-                                    user.getRole().getName(),
-                                    user.getStatus()
-                            );
+                            Vehicle vehicle = (user.getVehicles() != null && !user.getVehicles().isEmpty())
+                                    ? user.getVehicles().get(0) // lấy xe đầu tiên
+                                    : null;
+
+                            return DriverDTO.builder()
+                                    .id(user.getId())
+                                    .status(user.getStatus())
+                                    .avatarImage(user.getAvatarImage())
+                                    .fullName(user.getFullName())
+                                    .email(user.getEmail())
+                                    .phoneNumber(user.getPhone())
+                                    .role(user.getRole().getName())
+                                    .licensePlate(vehicle != null ? vehicle.getLicensePlate() : null)
+                                    .brand(vehicle != null ? vehicle.getBrand() : null)
+                                    .model(vehicle != null ? vehicle.getModel() : null)
+                                    .color(vehicle != null ? vehicle.getColor() : null)
+                                    .numberOfSeats(vehicle != null ? vehicle.getNumberOfSeats() : null)
+                                    .vehicleImageUrl(vehicle != null ? vehicle.getVehicleImageUrl() : null)
+                                    .licenseImageUrl(vehicle != null ? vehicle.getLicenseImageUrl() : null)
+                                    .build();
                         case "PASSENGER":
-                            return new UserDTO(user, fileService); // 👈 constructor mới
+                            return new UserDTO(
+                                    user.getId(),
+                                    user.getAvatarImage(),
+                                    user.getAvatarImagePublicId(),
+                                    user.getEmail(),
+                                    user.getFullName(),
+                                    user.getPhone()
+                            ); // 👈 constructor mới
                         default:
                             throw new IllegalArgumentException("Unknown role: " + role);
                     }
@@ -235,17 +308,26 @@ public class UserServiceImp implements UserService {
         Optional<Users> optionalUser = userRepository.findUsersById(id);
         if (optionalUser.isEmpty()) {return null;}
         Users user = optionalUser.get();
-        return new DriverDTO(
-                user.getId(),
-                user.getStatus(),
-                fileService.generateFileUrl(user.getLicenseImageUrl()),
-                fileService.generateFileUrl(user.getVehicleImageUrl()),
-                fileService.generateFileUrl(user.getAvatarImage()),
-                user.getFullName(),
-                user.getEmail(),
-                user.getPhone(),
-                user.getRole().getName()
-        );
+        Vehicle vehicle = (user.getVehicles() != null && !user.getVehicles().isEmpty())
+                ? user.getVehicles().get(0) // lấy xe đầu tiên
+                : null;
+        return DriverDTO.builder()
+                .id(user.getId())
+                .status(user.getStatus())
+                .avatarImage(user.getAvatarImage())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhone())
+                .role(user.getRole().getName())
+                .licensePlate(vehicle != null ? vehicle.getLicensePlate() : null)
+                .brand(vehicle != null ? vehicle.getBrand() : null)
+                .model(vehicle != null ? vehicle.getModel() : null)
+                .color(vehicle != null ? vehicle.getColor() : null)
+                .numberOfSeats(vehicle != null ? vehicle.getNumberOfSeats() : null)
+                .vehicleImageUrl(vehicle != null ? vehicle.getVehicleImageUrl() : null)
+                .licenseImageUrl(vehicle != null ? vehicle.getLicenseImageUrl() : null)
+                .status(user.getStatus())
+                .build();
     }
 
     @Override
@@ -255,29 +337,6 @@ public class UserServiceImp implements UserService {
         Users user = optionalUser.get();
         userRepository.delete(user);
         return true;
-    }
-
-    public String saveImage(MultipartFile file, String type, Users user) {
-        if (file == null || file.isEmpty()) return null;
-
-        String uploadPath = "uploads/";
-        new File(uploadPath).mkdirs();
-
-        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        String filePath = uploadPath + fileName;
-
-        try {
-            Files.copy(file.getInputStream(), new File(filePath).toPath(), StandardCopyOption.REPLACE_EXISTING);
-            switch (type) {
-                case "avatar" -> user.setAvatarImage(filePath);
-                case "license" -> user.setLicenseImageUrl(filePath);
-                case "vehicle" -> user.setVehicleImageUrl(filePath);
-            }
-            return filePath;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
 }

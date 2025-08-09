@@ -21,6 +21,15 @@ public class Users {
     private String fullName;
     private String phone;
     private String avatarImage;
+    private String avatarImagePublicId;
+
+    public String getAvatarImagePublicId() {
+        return avatarImagePublicId;
+    }
+
+    public void setAvatarImagePublicId(String avatarImagePublicId) {
+        this.avatarImagePublicId = avatarImagePublicId;
+    }
 
     public String getAvatarImage() {
         return avatarImage;
@@ -30,24 +39,6 @@ public class Users {
         this.avatarImage = avatarImage;
     }
 
-    public String getLicenseImageUrl() {
-        return licenseImageUrl;
-    }
-
-    public void setLicenseImageUrl(String licenseImageUrl) {
-        this.licenseImageUrl = licenseImageUrl;
-    }
-
-    public String getVehicleImageUrl() {
-        return vehicleImageUrl;
-    }
-
-    public void setVehicleImageUrl(String vehicleImageUrl) {
-        this.vehicleImageUrl = vehicleImageUrl;
-    }
-
-    private String licenseImageUrl;
-    private String vehicleImageUrl;
 
     public Role getRole() {
         return role;
@@ -178,6 +169,17 @@ public class Users {
 
     @Column(length = 1000)
     private String refreshToken;
+
+    public List<Vehicle> getVehicles() {
+        return vehicles;
+    }
+
+    public void setVehicles(List<Vehicle> vehicles) {
+        this.vehicles = vehicles;
+    }
+
+    @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Vehicle> vehicles = new ArrayList<>();
 
 
 }
