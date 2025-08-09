@@ -4,7 +4,6 @@ import lombok.*;
 import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Status.BookingStatus;
 import org.example.carpooling.Entity.Vehicle;
-import org.example.carpooling.Service.FileService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -60,12 +59,12 @@ public class BookingDTO {
         private BookingStatus status;
         private int seatsBooked;
 
-        public PassengerInfo(Booking booking, FileService fileService) {
+        public PassengerInfo(Booking booking) {
             this.id = booking.getPassenger().getId();
             this.name = booking.getPassenger().getFullName();
             this.phone = booking.getPassenger().getPhone();
             this.email = booking.getPassenger().getEmail();
-            this.avatarUrl = fileService.generateFileUrl(booking.getPassenger().getAvatarImage());
+            this.avatarUrl = booking.getPassenger().getAvatarImage();
             this.status = booking.getStatus();
             this.seatsBooked = booking.getSeatsBooked();
         }
