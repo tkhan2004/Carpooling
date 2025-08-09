@@ -1,4 +1,4 @@
-package org.example.carpooling.Security;
+package org.example.carpooling.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
