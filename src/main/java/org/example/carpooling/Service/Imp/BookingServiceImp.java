@@ -11,7 +11,6 @@ import org.example.carpooling.Repository.BookingRepository;
 import org.example.carpooling.Repository.RideRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.BookingService;
-import org.example.carpooling.Service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,9 +28,6 @@ public class BookingServiceImp implements BookingService {
 
     @Autowired
     BookingRepository bookingRepository;
-
-    @Autowired
-    FileService fileService;
 
     // Khách book
     @Override
@@ -264,7 +260,7 @@ public class BookingServiceImp implements BookingService {
             List<Booking> sameRideBookings = rideToBookingsMap.get(booking.getRides().getId());
             List<BookingDTO.PassengerInfo> fellowPassengers = sameRideBookings.stream()
                     .filter(b -> !b.getId().equals(booking.getId())) // Loại trừ booking hiện tại
-                    .map(b -> new BookingDTO.PassengerInfo(b, fileService))
+                    .map(b -> new BookingDTO.PassengerInfo(b))
                     .collect(Collectors.toList());
 
             dto.setFellowPassengers(fellowPassengers);
@@ -303,7 +299,7 @@ public class BookingServiceImp implements BookingService {
             List<Booking> sameRideBookings = rideToBookingsMap.get(booking.getRides().getId());
             List<BookingDTO.PassengerInfo> fellowPassengers = sameRideBookings.stream()
                     .filter(b -> !b.getId().equals(booking.getId())) // Loại trừ booking hiện tại
-                    .map(b -> new BookingDTO.PassengerInfo(b, fileService))
+                    .map(b -> new BookingDTO.PassengerInfo(b))
                     .collect(Collectors.toList());
 
             dto.setFellowPassengers(fellowPassengers);
