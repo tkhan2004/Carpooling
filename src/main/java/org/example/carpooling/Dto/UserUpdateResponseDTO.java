@@ -1,26 +1,18 @@
 package org.example.carpooling.Dto;
-
 import lombok.*;
-import org.example.carpooling.Entity.Status.DriverStatus;
+
+
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class DriverDTO {
-    private Long id;
+public class UserUpdateResponseDTO {
 
-    private DriverStatus status;
-
-    private String avatarImage;
+    private String phone;
 
     private String fullName;
 
-    private String email;
-
-    private String phoneNumber;
-
-    private String role;
+    private String AvatarImageUrl;
 
     private String licensePlate;
 
@@ -30,9 +22,11 @@ public class DriverDTO {
 
     private String color;
 
+
     private Integer numberOfSeats;
 
+    // Link ảnh (upload Cloudinary hoặc local)
     private String vehicleImageUrl;
-
     private String licenseImageUrl;
+
 }

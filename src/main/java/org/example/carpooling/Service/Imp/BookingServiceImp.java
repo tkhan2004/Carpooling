@@ -69,7 +69,7 @@ public class BookingServiceImp implements BookingService {
 
         bookingRepository.save(booking);
 
-        return new BookingDTO(booking, fileService);
+        return new BookingDTO(booking);
     }
 
     @Override
@@ -110,7 +110,7 @@ public class BookingServiceImp implements BookingService {
             rideRepository.save(ride);
         }
 
-        return new BookingDTO(booking, fileService);
+        return new BookingDTO(booking);
     }
 
     @Override
@@ -179,7 +179,7 @@ public class BookingServiceImp implements BookingService {
         List<Booking> bookings = bookingRepository.findBookingsByPassengerEmail(email);
 
         return bookings.stream()
-                .map(booking -> new BookingDTO(booking, fileService))
+                .map(booking -> new BookingDTO(booking))
                 .collect(Collectors.toList());
     }
 
@@ -231,7 +231,7 @@ public class BookingServiceImp implements BookingService {
             throw new RuntimeException("Không có booking nào đủ điều kiện để huỷ");
         }
 
-        return new BookingDTO(cancelledBooking, fileService);
+        return new BookingDTO(cancelledBooking);
     }
 
     @Override
@@ -258,7 +258,7 @@ public class BookingServiceImp implements BookingService {
 
         // Chuyển đổi sang BookingDTO và thêm thông tin hành khách cùng chuyến
         return allDriverBookings.stream().map(booking -> {
-            BookingDTO dto = new BookingDTO(booking, fileService);
+            BookingDTO dto = new BookingDTO(booking);
 
             // Thêm danh sách hành khách cùng chuyến, BAO GỒM tất cả trạng thái
             List<Booking> sameRideBookings = rideToBookingsMap.get(booking.getRides().getId());
@@ -297,7 +297,7 @@ public class BookingServiceImp implements BookingService {
 
         // Chuyển đổi từ Booking sang BookingDTO với thông tin về hành khách cùng chuyến
         return driverBookings.stream().map(booking -> {
-            BookingDTO dto = new BookingDTO(booking, fileService);
+            BookingDTO dto = new BookingDTO(booking);
 
             // Thêm danh sách hành khách cùng chuyến, BAO GỒM tất cả trạng thái
             List<Booking> sameRideBookings = rideToBookingsMap.get(booking.getRides().getId());

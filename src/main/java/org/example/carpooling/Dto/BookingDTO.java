@@ -1,13 +1,17 @@
 package org.example.carpooling.Dto;
 
+import lombok.*;
 import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Status.BookingStatus;
+import org.example.carpooling.Entity.Vehicle;
 import org.example.carpooling.Service.FileService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Data
+@AllArgsConstructor
 public class BookingDTO {
     // Thông tin đặt chỗ
     private Long id;
@@ -70,62 +74,6 @@ public class BookingDTO {
         public PassengerInfo() {
         }
 
-        // Getters và setters
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getPhone() {
-            return phone;
-        }
-
-        public void setPhone(String phone) {
-            this.phone = phone;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getAvatarUrl() {
-            return avatarUrl;
-        }
-
-        public void setAvatarUrl(String avatarUrl) {
-            this.avatarUrl = avatarUrl;
-        }
-
-        public BookingStatus getStatus() {
-            return status;
-        }
-
-        public void setStatus(BookingStatus status) {
-            this.status = status;
-        }
-
-        public int getSeatsBooked() {
-            return seatsBooked;
-        }
-
-        public void setSeatsBooked(int seatsBooked) {
-            this.seatsBooked = seatsBooked;
-        }
     }
 
     // Constructor mặc định
@@ -133,7 +81,7 @@ public class BookingDTO {
     }
 
     // Constructor chính
-    public BookingDTO(Booking booking, FileService fileService) {
+    public BookingDTO(Booking booking ) {
         // Thông tin đặt chỗ
         this.id = booking.getId();
         this.rideId = booking.getRides().getId();
@@ -157,14 +105,15 @@ public class BookingDTO {
 
         // Thông tin tài xế
         if (booking.getRides().getDriver() != null) {
+            Vehicle vehicle = booking.getRides().getDriver().getVehicles().get(0);
             this.driverId = booking.getRides().getDriver().getId();
             this.driverName = booking.getRides().getDriver().getFullName();
             this.driverPhone = booking.getRides().getDriver().getPhone();
             this.driverEmail = booking.getRides().getDriver().getEmail();
             this.driverStatus = booking.getRides().getDriver().getStatus().toString();
-            this.driverAvatarUrl = fileService.generateFileUrl(booking.getRides().getDriver().getAvatarImage());
-            this.driverVehicleImageUrl = fileService.generateFileUrl(booking.getRides().getDriver().getVehicleImageUrl());
-            this.driverLicenseImageUrl = fileService.generateFileUrl(booking.getRides().getDriver().getLicenseImageUrl());
+            this.driverAvatarUrl = booking.getRides().getDriver().getAvatarImage();
+            this.driverVehicleImageUrl = vehicle.getVehicleImageUrl();
+            this.driverLicenseImageUrl = vehicle.getLicenseImageUrl();
         }
 
         // Thông tin hành khách
@@ -173,7 +122,7 @@ public class BookingDTO {
             this.passengerName = booking.getPassenger().getFullName();
             this.passengerPhone = booking.getPassenger().getPhone();
             this.passengerEmail = booking.getPassenger().getEmail();
-            this.passengerAvatarUrl = fileService.generateFileUrl(booking.getPassenger().getAvatarImage());
+            this.passengerAvatarUrl = booking.getPassenger().getAvatarImage();
         }
     }
 
@@ -188,220 +137,4 @@ public class BookingDTO {
         this.createdAt = createdAt;
     }
 
-    // Getters và setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getRideId() {
-        return rideId;
-    }
-
-    public void setRideId(Long rideId) {
-        this.rideId = rideId;
-    }
-
-    public int getSeatsBooked() {
-        return seatsBooked;
-    }
-
-    public void setSeatsBooked(int seatsBooked) {
-        this.seatsBooked = seatsBooked;
-    }
-
-    public BookingStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(BookingStatus status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public BigDecimal getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(BigDecimal totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-    public String getDeparture() {
-        return departure;
-    }
-
-    public void setDeparture(String departure) {
-        this.departure = departure;
-    }
-
-    public String getDestination() {
-        return destination;
-    }
-
-    public void setDestination(String destination) {
-        this.destination = destination;
-    }
-
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public BigDecimal getPricePerSeat() {
-        return pricePerSeat;
-    }
-
-    public void setPricePerSeat(BigDecimal pricePerSeat) {
-        this.pricePerSeat = pricePerSeat;
-    }
-
-    public String getRideStatus() {
-        return rideStatus;
-    }
-
-    public void setRideStatus(String rideStatus) {
-        this.rideStatus = rideStatus;
-    }
-
-    public int getTotalSeats() {
-        return totalSeats;
-    }
-
-    public void setTotalSeats(int totalSeats) {
-        this.totalSeats = totalSeats;
-    }
-
-    public int getAvailableSeats() {
-        return availableSeats;
-    }
-
-    public void setAvailableSeats(int availableSeats) {
-        this.availableSeats = availableSeats;
-    }
-
-    public Long getDriverId() {
-        return driverId;
-    }
-
-    public void setDriverId(Long driverId) {
-        this.driverId = driverId;
-    }
-
-    public String getDriverName() {
-        return driverName;
-    }
-
-    public void setDriverName(String driverName) {
-        this.driverName = driverName;
-    }
-
-    public String getDriverPhone() {
-        return driverPhone;
-    }
-
-    public void setDriverPhone(String driverPhone) {
-        this.driverPhone = driverPhone;
-    }
-
-    public String getDriverEmail() {
-        return driverEmail;
-    }
-
-    public void setDriverEmail(String driverEmail) {
-        this.driverEmail = driverEmail;
-    }
-
-    public String getDriverAvatarUrl() {
-        return driverAvatarUrl;
-    }
-
-    public void setDriverAvatarUrl(String driverAvatarUrl) {
-        this.driverAvatarUrl = driverAvatarUrl;
-    }
-
-    public String getDriverVehicleImageUrl() {
-        return driverVehicleImageUrl;
-    }
-
-    public void setDriverVehicleImageUrl(String driverVehicleImageUrl) {
-        this.driverVehicleImageUrl = driverVehicleImageUrl;
-    }
-
-    public String getDriverLicenseImageUrl() {
-        return driverLicenseImageUrl;
-    }
-
-    public void setDriverLicenseImageUrl(String driverLicenseImageUrl) {
-        this.driverLicenseImageUrl = driverLicenseImageUrl;
-    }
-
-    public String getDriverStatus() {
-        return driverStatus;
-    }
-
-    public void setDriverStatus(String driverStatus) {
-        this.driverStatus = driverStatus;
-    }
-
-    public Long getPassengerId() {
-        return passengerId;
-    }
-
-    public void setPassengerId(Long passengerId) {
-        this.passengerId = passengerId;
-    }
-
-    public String getPassengerName() {
-        return passengerName;
-    }
-
-    public void setPassengerName(String passengerName) {
-        this.passengerName = passengerName;
-    }
-
-    public String getPassengerPhone() {
-        return passengerPhone;
-    }
-
-    public void setPassengerPhone(String passengerPhone) {
-        this.passengerPhone = passengerPhone;
-    }
-
-    public String getPassengerEmail() {
-        return passengerEmail;
-    }
-
-    public void setPassengerEmail(String passengerEmail) {
-        this.passengerEmail = passengerEmail;
-    }
-
-    public String getPassengerAvatarUrl() {
-        return passengerAvatarUrl;
-    }
-
-    public void setPassengerAvatarUrl(String passengerAvatarUrl) {
-        this.passengerAvatarUrl = passengerAvatarUrl;
-    }
-
-    public List<PassengerInfo> getFellowPassengers() {
-        return fellowPassengers;
-    }
-
-    public void setFellowPassengers(List<PassengerInfo> fellowPassengers) {
-        this.fellowPassengers = fellowPassengers;
-    }
 }
