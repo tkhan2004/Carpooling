@@ -34,8 +34,6 @@ build/
 
 ### Application configuration ###
 src/main/resources/application.yml
-src/main/resources/application-*.yml
-!src/main/resources/application.example.yml
 # Ignore sensitive config
 src/main/resources/application.yml
 
