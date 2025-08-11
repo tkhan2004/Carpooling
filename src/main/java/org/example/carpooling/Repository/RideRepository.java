@@ -19,7 +19,9 @@ public interface RideRepository extends JpaRepository<Rides, Long> {
 
     @Query("SELECT new org.example.carpooling.Dto.RideRequestDTO(" +
             "r.id, r.availableSeats, r.driver.fullName, r.driver.email, " +
-            "r.departure, r.destination, r.startTime, r.pricePerSeat, r.totalSeats, r.status) " +
+            "r.departure, r.startLat, r.startLng, r.startAddress, r.startWard, r.startDistrict, r.startProvince, " +
+            "r.endLat, r.endLng, r.endAddress, r.endWard, r.endDistrict, r.endProvince, r.destination, " +
+            "r.startTime, r.pricePerSeat, r.totalSeats, r.status) " +
             "FROM Rides r WHERE r.status = 'ACTIVE'")
     List<RideRequestDTO> findAllRidesByStatus();
 

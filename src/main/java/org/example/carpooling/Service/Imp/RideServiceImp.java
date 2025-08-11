@@ -58,6 +58,18 @@ import java.util.stream.Collectors;
         Rides ride = new Rides();
         ride.setDriver(driver);
         ride.setDeparture(rideRequest.getDeparture());
+        ride.setStartLat(rideRequest.getStartLat());
+        ride.setStartLng(rideRequest.getStartLng());
+        ride.setStartAddress(rideRequest.getStartAddress());
+        ride.setStartWard(rideRequest.getStartWard());
+        ride.setStartDistrict(rideRequest.getStartDistrict());
+        ride.setStartProvince(rideRequest.getStartProvince());
+        ride.setEndLat(rideRequest.getEndLat());
+        ride.setEndLng(rideRequest.getEndLng());
+        ride.setEndAddress(rideRequest.getEndAddress());
+        ride.setEndWard(rideRequest.getEndWard());
+        ride.setEndDistrict(rideRequest.getEndDistrict());
+        ride.setEndProvince(rideRequest.getEndProvince());
         ride.setDestination(rideRequest.getDestination());
         ride.setStartTime(newStart);
         ride.setPricePerSeat(rideRequest.getPricePerSeat());
@@ -87,14 +99,32 @@ import java.util.stream.Collectors;
         return rides.stream()
                 .map(ride -> new RideRequestDTO(
                         ride.getId(),
-                        ride.getAvailableSeats(), // Sửa thành camelCase
-                        ride.getDriver().getFullName(),
-                        ride.getDriver().getEmail(),
+                        ride.getAvailableSeats(),
+                        ride.getDriver() != null ? ride.getDriver().getFullName() : null,
+                        ride.getDriver() != null ? ride.getDriver().getEmail() : null,
+
+                        // Điểm đi
                         ride.getDeparture(),
+                        ride.getStartLat(),
+                        ride.getStartLng(),
+                        ride.getStartAddress(),
+                        ride.getStartWard(),
+                        ride.getStartDistrict(),
+                        ride.getStartProvince(),
+
+                        // Điểm đến
+                        ride.getEndLat(),
+                        ride.getEndLng(),
+                        ride.getEndAddress(),
+                        ride.getEndWard(),
+                        ride.getEndDistrict(),
+                        ride.getEndProvince(),
                         ride.getDestination(),
-                        ride.getStartTime(), // Sửa thành camelCase
-                        ride.getPricePerSeat(), // Sửa thành camelCase
-                        ride.getTotalSeats(), // Sửa thành camelCase
+
+                        // Thời gian, giá, ghế, trạng thái
+                        ride.getStartTime(),
+                        ride.getPricePerSeat(),
+                        ride.getTotalSeats(),
                         ride.getStatus()
                 ))
                 .collect(Collectors.toList());
@@ -107,15 +137,33 @@ import java.util.stream.Collectors;
         // Create DTO and set values using the constructor
         RideRequestDTO dto = new RideRequestDTO(
                 ride.getId(),
-                ride.getAvailableSeats(), // Ensure this is available in your Rides entity
-                ride.getDriver().getFullName(),
-                ride.getDriver().getEmail(),
+                ride.getAvailableSeats(),
+                ride.getDriver() != null ? ride.getDriver().getFullName() : null,
+                ride.getDriver() != null ? ride.getDriver().getEmail() : null,
+
+                // Điểm đi
                 ride.getDeparture(),
+                ride.getStartLat(),
+                ride.getStartLng(),
+                ride.getStartAddress(),
+                ride.getStartWard(),
+                ride.getStartDistrict(),
+                ride.getStartProvince(),
+
+                // Điểm đến
+                ride.getEndLat(),
+                ride.getEndLng(),
+                ride.getEndAddress(),
+                ride.getEndWard(),
+                ride.getEndDistrict(),
+                ride.getEndProvince(),
                 ride.getDestination(),
+
+                // Thời gian, giá, ghế, trạng thái
                 ride.getStartTime(),
                 ride.getPricePerSeat(),
                 ride.getTotalSeats(),
-                ride.getStatus()// Make sure you get the correct field here
+                ride.getStatus()
         );
 
         return dto;
@@ -137,42 +185,64 @@ import java.util.stream.Collectors;
         // Cập nhật đối tượng DTO với các giá trị mới nhất từ entity Ride
         RideRequestDTO dto = new RideRequestDTO(
                 ride.getId(),
-                ride.getAvailableSeats(),  // Dùng 'availableSeats' thay vì 'available_seats'
-                ride.getDriver().getFullName(),
-                ride.getDriver().getEmail(),
+                ride.getAvailableSeats(),
+                ride.getDriver() != null ? ride.getDriver().getFullName() : null,
+                ride.getDriver() != null ? ride.getDriver().getEmail() : null,
+
+                // Điểm đi
                 ride.getDeparture(),
+                ride.getStartLat(),
+                ride.getStartLng(),
+                ride.getStartAddress(),
+                ride.getStartWard(),
+                ride.getStartDistrict(),
+                ride.getStartProvince(),
+
+                // Điểm đến
+                ride.getEndLat(),
+                ride.getEndLng(),
+                ride.getEndAddress(),
+                ride.getEndWard(),
+                ride.getEndDistrict(),
+                ride.getEndProvince(),
                 ride.getDestination(),
-                ride.getStartTime(),  // Sửa lại 'getStart_time()' thành 'getStartTime()'
-                ride.getPricePerSeat(),  // 'pricePerSeat' thay vì 'price_per_seat'
-                ride.getTotalSeats(),  // 'totalSeats' thay vì 'total_seats'
-                ride.getStatus()  // Trả về trạng thái của chuyến đi
+
+                // Thời gian, giá, ghế, trạng thái
+                ride.getStartTime(),
+                ride.getPricePerSeat(),
+                ride.getTotalSeats(),
+                ride.getStatus()
         );
 
         return dto;
     }
 
     @Override
-    public RideRequestDTO updateRide(Long rideId, RideRequestDTO rideRequest, String email) {
+    public void updateRide(Long rideId, RideRequestDTO rideRequest, String email) {
+        LocalDateTime newStart = rideRequest.getStartTime();
+        LocalDateTime newEnd = newStart.plusHours(2); // giả sử chuyến kéo dài 2 giờ
+
         Rides ride = rideRepository.findDetailRideById(rideId);
-        ride.setAvailableSeats(rideRequest.getAvailableSeats());
         ride.setDeparture(rideRequest.getDeparture());
+        ride.setStartLat(rideRequest.getStartLat());
+        ride.setStartLng(rideRequest.getStartLng());
+        ride.setStartAddress(rideRequest.getStartAddress());
+        ride.setStartWard(rideRequest.getStartWard());
+        ride.setStartDistrict(rideRequest.getStartDistrict());
+        ride.setStartProvince(rideRequest.getStartProvince());
+        ride.setEndLat(rideRequest.getEndLat());
+        ride.setEndLng(rideRequest.getEndLng());
+        ride.setEndAddress(rideRequest.getEndAddress());
+        ride.setEndWard(rideRequest.getEndWard());
+        ride.setEndDistrict(rideRequest.getEndDistrict());
+        ride.setEndProvince(rideRequest.getEndProvince());
         ride.setDestination(rideRequest.getDestination());
-        ride.setStartTime(rideRequest.getStartTime());
+        ride.setStartTime(newStart);
         ride.setPricePerSeat(rideRequest.getPricePerSeat());
+        ride.setAvailableSeats(rideRequest.getTotalSeat());
         ride.setTotalSeats(rideRequest.getTotalSeat());
         rideRepository.save(ride);
 
-        RideRequestDTO dto = new RideRequestDTO(ride.getId(),
-                ride.getAvailableSeats(),
-                ride.getDriver().getFullName(),
-                ride.getDriver().getEmail(),
-                ride.getDeparture(),
-                ride.getDestination(),
-                ride.getStartTime(),
-                ride.getPricePerSeat(),
-                ride.getTotalSeats(),
-                ride.getStatus());
-        return dto;
     }
 
     @Override
@@ -182,10 +252,28 @@ import java.util.stream.Collectors;
                 .map(ride -> new RideRequestDTO(
                         ride.getId(),
                         ride.getAvailableSeats(),
-                        ride.getDriver().getFullName(),
-                        ride.getDriver().getEmail(),
+                        ride.getDriver() != null ? ride.getDriver().getFullName() : null,
+                        ride.getDriver() != null ? ride.getDriver().getEmail() : null,
+
+                        // Điểm đi
                         ride.getDeparture(),
+                        ride.getStartLat(),
+                        ride.getStartLng(),
+                        ride.getStartAddress(),
+                        ride.getStartWard(),
+                        ride.getStartDistrict(),
+                        ride.getStartProvince(),
+
+                        // Điểm đến
+                        ride.getEndLat(),
+                        ride.getEndLng(),
+                        ride.getEndAddress(),
+                        ride.getEndWard(),
+                        ride.getEndDistrict(),
+                        ride.getEndProvince(),
                         ride.getDestination(),
+
+                        // Thời gian, giá, ghế, trạng thái
                         ride.getStartTime(),
                         ride.getPricePerSeat(),
                         ride.getTotalSeats(),
@@ -201,10 +289,28 @@ import java.util.stream.Collectors;
                 .map(ride -> new RideRequestDTO(
                         ride.getId(),
                         ride.getAvailableSeats(),
-                        ride.getDriver().getFullName(),
-                        ride.getDriver().getEmail(),
+                        ride.getDriver() != null ? ride.getDriver().getFullName() : null,
+                        ride.getDriver() != null ? ride.getDriver().getEmail() : null,
+
+                        // Điểm đi
                         ride.getDeparture(),
+                        ride.getStartLat(),
+                        ride.getStartLng(),
+                        ride.getStartAddress(),
+                        ride.getStartWard(),
+                        ride.getStartDistrict(),
+                        ride.getStartProvince(),
+
+                        // Điểm đến
+                        ride.getEndLat(),
+                        ride.getEndLng(),
+                        ride.getEndAddress(),
+                        ride.getEndWard(),
+                        ride.getEndDistrict(),
+                        ride.getEndProvince(),
                         ride.getDestination(),
+
+                        // Thời gian, giá, ghế, trạng thái
                         ride.getStartTime(),
                         ride.getPricePerSeat(),
                         ride.getTotalSeats(),

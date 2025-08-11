@@ -102,8 +102,8 @@ public class RideController {
         try {
             String token = jwtUtil.extractTokenFromRequest(request);
             String email = jwtUtil.extractUsername(token);
-            RideRequestDTO ride = rideService.updateRide(id, rideRequest, email);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật chuyến đi thành công", ride));
+            rideService.updateRide(id, rideRequest, email);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật chuyến đi thành công", null));
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, ex.getMessage(), null));
         } catch (Exception e) {

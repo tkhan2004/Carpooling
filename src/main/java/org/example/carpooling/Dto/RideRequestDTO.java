@@ -1,5 +1,6 @@
 package org.example.carpooling.Dto;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.*;
@@ -20,14 +21,50 @@ public class RideRequestDTO {
     private Long id;
     private int availableSeats;
 
-
     private String driverName;
 
     private String driverEmail;
 
-
+    // ====== Điểm đi ======
     @NotBlank(message=" Điểm khởi hành không được để trống")
     private String departure;
+
+    @NotBlank(message=" Điểm khởi hành không được để trống")
+    private Double startLat;
+
+    @NotBlank(message=" Điểm khởi hành không được để trống")
+    private Double startLng;
+
+    @NotBlank(message=" Điểm khởi hành không được để trống")
+    private String startAddress;
+
+    @NotBlank(message=" Điểm khởi hành không được để trống")
+    private String startWard;
+
+    @NotBlank(message=" Điểm khởi hành không được để trống")
+    private String startDistrict;
+
+    @NotBlank(message=" Điểm khởi hành không được để trống")
+    private String startProvince;
+
+    // ====== Điểm đến ======
+    @NotBlank(message=" Điểm đến không được để trống")
+    private Double endLat;
+
+    @NotBlank(message=" Điểm đến không được để trống")
+    private Double endLng;
+
+    @NotBlank(message=" Điểm đến không được để trống")
+    private String endAddress;
+
+    @NotBlank(message=" Điểm đến không được để trống")
+    private String endWard;
+
+    @NotBlank(message=" Điểm đến không được để trống")
+    private String endDistrict;
+
+    @NotBlank(message=" Điểm đến không được để trống")
+    private String endProvince;
 
     @NotBlank(message=" Điểm đến không được để trống")
     private String destination;
