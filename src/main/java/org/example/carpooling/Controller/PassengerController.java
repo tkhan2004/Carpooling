@@ -137,9 +137,9 @@ public class PassengerController {
                 );
             }
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Hành khách đã xác nhận hoàn thành", null));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Hành khách đã xác nhận hoàn thành"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Lỗi khi xác nhận", null));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Lỗi khi xác nhận"));
         }
     }
 

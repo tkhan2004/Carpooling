@@ -130,10 +130,10 @@ public class AdminController {
                     id
             ));
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Chấp nhận tài xế thành công", null));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Chấp nhận tài xế thành công"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(false, "Chấp nhận tài xế thất bại", null));
+                    .body(new ApiResponse<>(false, "Chấp nhận tài xế thất bại"));
         }
     }
 }

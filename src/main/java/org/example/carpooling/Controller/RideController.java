@@ -103,11 +103,11 @@ public class RideController {
             String token = jwtUtil.extractTokenFromRequest(request);
             String email = jwtUtil.extractUsername(token);
             rideService.updateRide(id, rideRequest, email);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật chuyến đi thành công", null));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật chuyến đi thành công"));
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, ex.getMessage(), null));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, ex.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi hệ thống khi cập nhật chuyến đi", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi hệ thống khi cập nhật chuyến đi"));
         }
     }
 

@@ -143,9 +143,9 @@ public class DriverController {
                     bookingId
             );
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã chấp nhận hành khách", null));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã chấp nhận hành khách"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi chấp nhận hành khách", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi chấp nhận hành khách"));
         }
     }
 
@@ -172,9 +172,9 @@ public class DriverController {
                     booking.getId()
             );
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối hành khách", null));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối hành khách"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi không thể từ chối hành khách", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi không thể từ chối hành khách"));
         }
     }
 
@@ -195,9 +195,9 @@ public class DriverController {
                 );
             }
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Tài xế đã hoàn thành chuyến đi", null));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Tài xế đã hoàn thành chuyến đi"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi xác nhận chuyến đi", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi xác nhận chuyến đi"));
         }
     }
 

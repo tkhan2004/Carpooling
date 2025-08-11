@@ -33,10 +33,10 @@ public class UserController
         try {
             String token = jwtUtil.extractTokenFromRequest(request);
             String mgs = userService.changePass(token,  changePassDTO);
-            return ResponseEntity.ok(new ApiResponse<>(true, mgs, null));
+            return ResponseEntity.ok(new ApiResponse<>(true, mgs));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(false, "Đổi mật khẩu thất bại: " + e.getMessage(), null));
+                    .body(new ApiResponse<>(false, "Đổi mật khẩu thất bại: " + e.getMessage()));
         }
     }
 
@@ -61,11 +61,11 @@ public class UserController
             // Gọi service update
             userService.updateProfile(token,userUpdateRequestDTO);
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật hồ sơ thành công", null));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật hồ sơ thành công"));
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(false, "Cập nhật hồ sơ thất bại: " + e.getMessage(), null));
+                    .body(new ApiResponse<>(false, "Cập nhật hồ sơ thất bại: " + e.getMessage()));
         }
     }
 

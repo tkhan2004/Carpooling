@@ -49,9 +49,9 @@ public class NotificationController {
             String email = jwtUtil.extractUsername(token);
 
             notificationService.markAsRead(id);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã đánh dấu thông báo là đã đọc", null));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã đánh dấu thông báo là đã đọc"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse<>(false, "Lỗi khi đánh dấu đã đọc", null));
+            return ResponseEntity.status(500).body(new ApiResponse<>(false, "Lỗi khi đánh dấu đã đọc"));
         }
     }
 
@@ -65,9 +65,9 @@ public class NotificationController {
             String email = jwtUtil.extractUsername(token);
 
             notificationService.markAllAsRead(email);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã đánh dấu tất cả thông báo là đã đọc", null));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã đánh dấu tất cả thông báo là đã đọc"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse<>(false, "Lỗi khi đánh dấu tất cả là đã đọc", null));
+            return ResponseEntity.status(500).body(new ApiResponse<>(false, "Lỗi khi đánh dấu tất cả là đã đọc"));
         }
     }
 
