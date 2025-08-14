@@ -1,9 +1,8 @@
 package org.example.carpooling.Controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.example.carpooling.Dto.ChangePassDTO;
-import org.example.carpooling.Dto.UserUpdateRequestDTO;
-import org.example.carpooling.Dto.UserUpdateResponseDTO;
+import org.example.carpooling.Dto.Request.ChangePassDTO;
+import org.example.carpooling.Dto.Request.UserUpdateRequestDTO;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Payload.ApiResponse;
@@ -13,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 

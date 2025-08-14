@@ -1,6 +1,6 @@
 package org.example.carpooling.Service.Imp;
 
-import org.example.carpooling.Dto.RideRequestDTO;
+import org.example.carpooling.Dto.Request.RideRequestDTO;
 import org.example.carpooling.Entity.Rides;
 import org.example.carpooling.Entity.Status.DriverStatus;
 import org.example.carpooling.Entity.Status.RideStatus;

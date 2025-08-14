@@ -1,7 +1,6 @@
 package org.example.carpooling.Service;
 
 import org.example.carpooling.Dto.BookingDTO;
-import org.example.carpooling.Dto.RideRequestDTO;
 import org.example.carpooling.Entity.Status.BookingStatus;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package org.example.carpooling.Repository;
 
-import org.example.carpooling.Dto.RideRequestDTO;
+import org.example.carpooling.Dto.Request.RideRequestDTO;
 import org.example.carpooling.Entity.Rides;
 import org.example.carpooling.Entity.Status.RideStatus;
 import org.example.carpooling.Entity.Users;
@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 @Repository
 public interface RideRepository extends JpaRepository<Rides, Long> {

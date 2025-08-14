@@ -1,10 +1,8 @@
-package org.example.carpooling.Dto;
+package org.example.carpooling.Dto.Request;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.*;
-import org.example.carpooling.Entity.Rides;
 import org.example.carpooling.Entity.Status.RideStatus;
 
 import javax.validation.constraints.Min;

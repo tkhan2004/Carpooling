@@ -1,6 +1,8 @@
 package org.example.carpooling.Service.Imp;
 
 import org.example.carpooling.Dto.*;
+import org.example.carpooling.Dto.Request.ChangePassDTO;
+import org.example.carpooling.Dto.Request.UserUpdateRequestDTO;
 import org.example.carpooling.Entity.Role;
 import org.example.carpooling.Entity.Status.DriverStatus;
 import org.example.carpooling.Entity.Users;
@@ -17,10 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 

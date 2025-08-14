@@ -1,7 +1,7 @@
 package org.example.carpooling.Controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.example.carpooling.Dto.RideRequestDTO;
+import org.example.carpooling.Dto.Request.RideRequestDTO;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Payload.ApiResponse;
 import org.example.carpooling.Service.RideService;

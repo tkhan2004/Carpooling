@@ -1,4 +1,4 @@
-package org.example.carpooling.Dto;
+package org.example.carpooling.Dto.Response;
 import lombok.*;
 
 

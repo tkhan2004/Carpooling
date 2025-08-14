@@ -1,4 +1,4 @@
-package org.example.carpooling.Dto;
+package org.example.carpooling.Dto.Request;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;

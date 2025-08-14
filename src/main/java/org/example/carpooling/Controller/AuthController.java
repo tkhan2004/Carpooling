@@ -1,7 +1,8 @@
 package org.example.carpooling.Controller;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import org.example.carpooling.Dto.*;
+import org.example.carpooling.Dto.Request.LoginRequest;
+import org.example.carpooling.Dto.Response.LoginResponse;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Entity.Vehicle;
 import org.example.carpooling.Exception.GlobalException;

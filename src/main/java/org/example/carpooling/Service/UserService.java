@@ -1,6 +1,8 @@
 package org.example.carpooling.Service;
 
 import org.example.carpooling.Dto.*;
+import org.example.carpooling.Dto.Request.ChangePassDTO;
+import org.example.carpooling.Dto.Request.UserUpdateRequestDTO;
 import org.example.carpooling.Entity.Users;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,7 +18,7 @@ public interface UserService {
                          MultipartFile licenseImage,
                          MultipartFile vehicleImage);
     Optional<Users> findByEmail(String email);
-    String changePass(String token, ChangePassDTO  changePassDTO);
+    String changePass(String token, ChangePassDTO changePassDTO);
     String updateProfile(String token, UserUpdateRequestDTO userUpdateDTO) throws IOException;
     List<?> getUsersByRole(String roleName);
     boolean rejectUser(Long id,String rejectionReason);

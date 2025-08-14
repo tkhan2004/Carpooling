@@ -3,7 +3,7 @@ package org.example.carpooling.Controller;
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.carpooling.Dto.BookingDTO;
 import org.example.carpooling.Dto.DriverDTO;
-import org.example.carpooling.Dto.RideRequestDTO;
+import org.example.carpooling.Dto.Request.RideRequestDTO;
 import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Status.BookingStatus;
 import org.example.carpooling.Entity.Users;

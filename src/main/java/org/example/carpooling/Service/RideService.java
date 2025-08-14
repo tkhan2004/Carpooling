@@ -1,8 +1,6 @@
 package org.example.carpooling.Service;
 
-import org.example.carpooling.Dto.RideRequestDTO;
-import org.springframework.data.repository.query.Param;
-import org.springframework.http.ResponseEntity;
+import org.example.carpooling.Dto.Request.RideRequestDTO;
 
 import java.time.LocalDate;
 import java.util.List;
