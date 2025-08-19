@@ -2,6 +2,7 @@ package org.example.carpooling.Controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.carpooling.Dto.ChatMessageDTO;
+import org.example.carpooling.Dto.ChatMessagePayload;
 import org.example.carpooling.Entity.ChatMessage;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Helper.JwtUtil;
@@ -9,7 +10,9 @@ import org.example.carpooling.Payload.ApiResponse;
 import org.example.carpooling.Repository.ChatMessageRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.ChatMessageService;
+import org.example.carpooling.Service.RedisService.RedisChatPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -27,7 +30,6 @@ public class ChatController {
     @Autowired
     private ChatMessageService chatMessageService;
 
-
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -39,6 +41,12 @@ public class ChatController {
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private RedisChatPublisher redisChatPublisher;
 
     @MessageMapping("/chat/{roomId}")
     public ChatMessageDTO processMessage(@DestinationVariable String roomId, ChatMessageDTO messageDTO) {
@@ -54,21 +62,30 @@ public class ChatController {
 
             Users sender = senderOpt.get();
 
+            // Gán thông tin đầy đủ vào DTO
             messageDTO.setSenderEmail(email);
             messageDTO.setSenderName(sender.getFullName());
             messageDTO.setTimestamp(LocalDateTime.now());
             messageDTO.setRoomId(roomId);
             messageDTO.setRead(false);
 
-            ChatMessage entity = new ChatMessage(messageDTO);
-            entity = chatMessageService.save(entity);
+            // Lưu DB
+            ChatMessage saved = chatMessageService.save(new ChatMessage(messageDTO));
 
-            simpMessagingTemplate.convertAndSend("/topic/chat/" + messageDTO.getReceiverEmail(), messageDTO);
-            simpMessagingTemplate.convertAndSend("/topic/chat/" + messageDTO.getSenderEmail(), messageDTO);
-            simpMessagingTemplate.convertAndSend("/topic/chat/" + roomId, messageDTO);
+            // Publish sang Redis (chỉ 1 lần ở đây thôi)
+            ChatMessagePayload payload = new ChatMessagePayload(
+                    saved.getRoomId(),
+                    saved.getSenderEmail(),
+                    saved.getReceiverEmail(),
+                    saved.getContent(),
+                    saved.getTimestamp(),
+                    saved.isRead()
+            );
+            redisChatPublisher.publish(payload);
 
             return messageDTO;
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
@@ -146,8 +163,14 @@ public class ChatController {
             dto.setRoomId(roomId);
 
             chatMessageService.save(new ChatMessage(dto));
-            simpMessagingTemplate.convertAndSend("/topic/chat/" + roomId, dto);
-
+            redisChatPublisher.publish(new ChatMessagePayload(
+                    dto.getRoomId(),
+                    dto.getSenderEmail(),
+                    dto.getReceiverEmail(),
+                    dto.getContent(),
+                    dto.getTimestamp(),
+                    dto.isRead()
+            ));
             return ResponseEntity.ok(new ApiResponse<>(true, "Tin nhắn đã được gửi", dto));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

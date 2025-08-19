@@ -12,13 +12,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Cho phép kết nối từ frontend (mobile/web) qua SockJS
-        registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*")  // Cho phép mọi origin trong môi trường dev
-                .withSockJS();
+//        registry.addEndpoint("/ws")
+//                .setAllowedOriginPatterns("*")// Cho phép mọi origin trong môi trường dev
+//                .withSockJS();
 
-        // Thêm endpoint không sử dụng SockJS cho Postman
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*");
+                .setAllowedOrigins("http://127.0.0.1:5500") // Live Server VS Code
+                .withSockJS();
     }
 
     @Override

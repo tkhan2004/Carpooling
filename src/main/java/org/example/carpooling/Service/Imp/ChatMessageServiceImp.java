@@ -1,11 +1,13 @@
 package org.example.carpooling.Service.Imp;
 
 import org.example.carpooling.Dto.ChatMessageDTO;
+import org.example.carpooling.Dto.ChatMessagePayload;
 import org.example.carpooling.Entity.ChatMessage;
 import org.example.carpooling.Entity.Users;
 import org.example.carpooling.Repository.ChatMessageRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.ChatMessageService;
+import org.example.carpooling.Service.RedisService.RedisChatPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,21 +26,26 @@ public class ChatMessageServiceImp implements ChatMessageService {
     @Autowired
     private UserRepository userRepository;
 
+
+    @Autowired
+    private RedisChatPublisher redisChatPublisher;
+
     @Override
     @Transactional
     public ChatMessage save(ChatMessage chatMessage) {
         // Kiểm tra và đảm bảo dữ liệu cần thiết đã được cung cấp
-        if (chatMessage.getSenderEmail() == null || chatMessage.getReceiverEmail() == null || 
+        if (chatMessage.getSenderEmail() == null || chatMessage.getReceiverEmail() == null ||
             chatMessage.getContent() == null || chatMessage.getRoomId() == null) {
             throw new IllegalArgumentException("Missing required fields for chat message");
         }
-        
+
         // Đảm bảo timestamp được thiết lập
         if (chatMessage.getTimestamp() == null) {
             chatMessage.setTimestamp(java.time.LocalDateTime.now());
         }
-        
-        return chatMessageRepository.save(chatMessage);
+
+        ChatMessage saved = chatMessageRepository.save(chatMessage);
+        return saved;
     }
 
     @Override
