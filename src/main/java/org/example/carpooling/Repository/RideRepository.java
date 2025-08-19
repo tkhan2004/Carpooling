@@ -16,7 +16,7 @@ public interface RideRepository extends JpaRepository<Rides, Long> {
 
     List<Rides> findByDriver_Email(String email);
 
-    @Query("SELECT new org.example.carpooling.Dto.RideRequestDTO(" +
+    @Query("SELECT new org.example.carpooling.Dto.Request.RideRequestDTO(" +
             "r.id, r.availableSeats, r.driver.fullName, r.driver.email, " +
             "r.departure, r.startLat, r.startLng, r.startAddress, r.startWard, r.startDistrict, r.startProvince, " +
             "r.endLat, r.endLng, r.endAddress, r.endWard, r.endDistrict, r.endProvince, r.destination, " +
