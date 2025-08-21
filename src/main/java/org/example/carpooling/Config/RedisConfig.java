@@ -1,6 +1,8 @@
 package org.example.carpooling.Config;
 
+import org.example.carpooling.Service.Imp.RedisServiceImp.RedisTrackingSubscriberImp;
 import org.example.carpooling.Service.RedisService.RedisChatSubscriber;
+import org.example.carpooling.Service.RedisService.RedisTrackingSubscriber;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,20 +46,32 @@ public class RedisConfig {
         return tpl;
     }
 
-    // Lắng nghe tất cả channel dạng chat:room:*
     @Bean
     public RedisMessageListenerContainer redisContainer(
             RedisConnectionFactory cf,
-            MessageListenerAdapter chatListenerAdapter) {
+            MessageListenerAdapter chatListenerAdapter,
+            MessageListenerAdapter trackingListenerAdapter) {
+
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(cf);
+
+        // Lắng nghe chat
         container.addMessageListener(chatListenerAdapter, new PatternTopic("chat:room:*"));
+
+        // Lắng nghe tracking
+        container.addMessageListener(trackingListenerAdapter, new PatternTopic("tracking:ride:*"));
+
         return container;
     }
 
     @Bean
     public MessageListenerAdapter chatListenerAdapter(RedisChatSubscriber subscriber) {
         // map method onMessage(String) của subscriber
+        return new MessageListenerAdapter(subscriber, "onMessage");
+    }
+
+    @Bean
+    public MessageListenerAdapter trackingListenerAdapter(RedisTrackingSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, "onMessage");
     }
 }
