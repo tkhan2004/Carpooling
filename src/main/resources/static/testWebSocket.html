@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat WebSocket Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h2>WebSocket Chat Test (Redis)</h2>
+
+<div>
+    <label>Server URL: </label>
+    <input type="text" id="serverUrl" value="http://localhost:8080/ws">
+    <button onclick="connect()">Connect</button>
+</div>
+
+<div>
+    <label>RoomId: </label>
+    <input type="text" id="roomId" value="room1">
+    <button onclick="subscribe()">Subscribe</button>
+</div>
+
+<div>
+    <label>JWT Token: </label>
+    <input type="text" id="token" size="80" placeholder="Paste your JWT here">
+</div>
+
+<div>
+    <label>Receiver Email: </label>
+    <input type="text" id="receiverEmail" value="user2@gmail.com">
+</div>
+
+<div>
+    <label>Message: </label>
+    <input type="text" id="message" value="Hello Redis Chat!">
+    <button onclick="sendMessage()">Send</button>
+</div>
+
+<hr>
+<h3>Logs</h3>
+<pre id="logs"></pre>
+
+<script>
+    let stompClient = null;
+
+    function log(message) {
+        document.getElementById("logs").innerText += message + "\n";
+    }
+
+    function connect() {
+        let serverUrl = document.getElementById("serverUrl").value;
+        let socket = new SockJS(serverUrl);
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            log("Connected: " + frame);
+        }, function (error) {
+            log("Error: " + error);
+        });
+    }
+
+    function subscribe() {
+        let roomId = document.getElementById("roomId").value;
+        if (!stompClient) {
+            log("Not connected!");
+            return;
+        }
+        stompClient.subscribe("/topic/chat/" + roomId, function (message) {
+            log("Received: " + message.body);
+        });
+        log("Subscribed to /topic/chat/" + roomId);
+    }
+
+    function sendMessage() {
+        if (!stompClient) {
+            log("Not connected!");
+            return;
+        }
+
+        let roomId = document.getElementById("roomId").value;
+        let token = document.getElementById("token").value;
+        let receiverEmail = document.getElementById("receiverEmail").value;
+        let content = document.getElementById("message").value;
+
+        let payload = {
+            token: token,
+            receiverEmail: receiverEmail,
+            content: content
+        };
+
+        stompClient.send("/app/chat/" + roomId, {}, JSON.stringify(payload));
+        log("Sent: " + JSON.stringify(payload));
+    }
+</script>
+</body>
+</html>
