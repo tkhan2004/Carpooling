@@ -11,7 +11,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    @Value("${spring.jwt.secret}")
+    @Value("${jwt.secret}")
     private String secretKeyBase64;
     private long timeFreshesToken = 3600000L * 24 * 30;
     private final long EXPIRATION_TIME =timeFreshesToken ; // 1 tiếng
