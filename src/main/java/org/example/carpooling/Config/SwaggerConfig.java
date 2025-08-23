@@ -26,21 +26,7 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Carpooling API")
                         .version("1.0.0")
-                        .description("API documentation for Carpooling Application - Ứng dụng chia sẻ chuyến đi")
-                        .contact(new Contact()
-                                .name("Carpooling Team")
-                                .email("support@carpooling.com")
-                                .url("https://carpooling.com"))
-                        .license(new License()
-                                .name("MIT License")
-                                .url("https://opensource.org/licenses/MIT")))
-                .servers(List.of(
-                        new Server()
-                                .url("http://localhost:" + serverPort)
-                                .description("Development Server"),
-                        new Server()
-                                .url("https://api.carpooling.com")
-                                .description("Production Server")))
+                        .description("API documentation for Carpooling Application - Ứng dụng chia sẻ chuyến đi"))
                 .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new Components()
                         .addSecuritySchemes("Bearer Authentication", createAPIKeyScheme()));
