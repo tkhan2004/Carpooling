@@ -25,12 +25,9 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
-  security:
-    enabled: false
-
 jwt:
-  secret: ${JWT_SECRET:vI9w4eiqMyTbQbwD5891ApcbUPaVlxdH7Sj52co1Dv0=}
-  expiration: ${JWT_EXPIRATION:86400000}
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
 
 springdoc:
   api-docs:
