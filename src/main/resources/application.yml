@@ -21,10 +21,11 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
-  redis:    # ✅ để đây, không lồng thêm spring
-    host: ${REDISHOST}
-    port: ${REDISPORT}
-    password: ${REDISPASSWORD}
+  redis:
+    data:
+      host: ${REDISHOST}
+      port: ${REDISPORT}
+      password: ${REDISPASSWORD} # ✅ để đây, không lồng thêm spring
 
 jwt:
   secret: ${JWT_SECRET}
