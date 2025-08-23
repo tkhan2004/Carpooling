@@ -4,27 +4,22 @@ server:
 
 spring:
   datasource:
-    # Railway MySQL public endpoint
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:carpooling}?useSSL=false&serverTimezone=UTC
-    username: ${MYSQL_USER:root}
-    password: ${MYSQL_PASSWORD:}
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    redis:
+      url: ${REDIS_PUBLIC_URL}
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    properties:
+      hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
 
-  data:
-    redis:
-      # Railway Redis public endpoint
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      username: ${REDIS_USER:}
-      password: ${REDIS_PASSWORD:}
-      # Hoặc dùng thẳng URI nếu muốn:
-      # url: ${REDIS_PUBLIC_URL:}
 
   servlet:
     multipart:
