@@ -1,6 +1,6 @@
 server:
   address: 0.0.0.0
-  port: ${PORT:8080}   # Render/Railway sẽ gán PORT khi deploy, local mặc định 8080
+  port: ${PORT:8080}
 
 spring:
   datasource:
@@ -15,21 +15,25 @@ spring:
     show-sql: true
     database-platform: org.hibernate.dialect.MySQL8Dialect
 
-  security:
-    enabled: false
-
-  jwt:
-    secret: ${JWT_SECRET:vI9w4eiqMyTbQbwD5891ApcbUPaVlxdH7Sj52co1Dv0=}
-    expiration: ${JWT_EXPIRATION:86400000}
+  data:
+    redis:
+      host: ${REDISHOST:localhost}
+      port: ${REDISPORT:6379}
+      password: ${REDISPASSWORD:}
+      username: ${REDISUSER:}
+      # Nếu muốn xài luôn URI thì có thể: url: ${REDIS_URL:}
 
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
 
-  data:
-    redis:
-      url: ${REDIS_PUBLIC_URL} # deploy Railway: Redis có password, local: để trống
+  security:
+    enabled: false
+
+  jwt:
+    secret: ${JWT_SECRET:vI9w4eiqMyTbQbwD5891ApcbUPaVlxdH7Sj52co1Dv0=}
+    expiration: ${JWT_EXPIRATION:86400000}
 
 springdoc:
   api-docs:
