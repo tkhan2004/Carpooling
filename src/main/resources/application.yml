@@ -9,10 +9,6 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-  data:
-    redis:
-      url: ${SPRING_REDIS_URL}
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -24,6 +20,9 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+
+  redis:
+    url: ${SPRING_REDIS_URL}
 
 jwt:
   secret: ${JWT_SECRET}
