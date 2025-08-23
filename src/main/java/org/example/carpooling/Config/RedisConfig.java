@@ -1,6 +1,5 @@
 package org.example.carpooling.Config;
 
-import org.example.carpooling.Service.Imp.RedisServiceImp.RedisTrackingSubscriberImp;
 import org.example.carpooling.Service.RedisService.RedisChatSubscriber;
 import org.example.carpooling.Service.RedisService.RedisTrackingSubscriber;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,21 +18,38 @@ import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.net.URI;
+
 @Configuration
 public class RedisConfig {
 
+    @Value("${SPRING_REDIS_URL}")
+    private String redisUrl;
+
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory(new RedisStandaloneConfiguration());
+        try {
+            URI uri = new URI(redisUrl);
+            String[] userInfo = uri.getUserInfo().split(":");
+
+            RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
+            config.setHostName(uri.getHost());
+            config.setPort(uri.getPort());
+            if (userInfo.length > 1) {
+                config.setPassword(RedisPassword.of(userInfo[1]));
+            }
+
+            return new LettuceConnectionFactory(config);
+        } catch (Exception e) {
+            throw new RuntimeException("❌ Invalid Redis URL: " + redisUrl, e);
+        }
     }
 
-    // Dùng StringRedisTemplate cho Pub/Sub (topic là chuỗi, payload JSON)
     @Bean
     public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory cf) {
         return new StringRedisTemplate(cf);
     }
 
-    // Nếu bạn vẫn cần RedisTemplate<Object, Object> thì giữ lại nhưng nhớ set serializer
     @Bean
     @Primary
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory cf) {
@@ -54,19 +71,13 @@ public class RedisConfig {
 
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(cf);
-
-        // Lắng nghe chat
         container.addMessageListener(chatListenerAdapter, new PatternTopic("chat:room:*"));
-
-        // Lắng nghe tracking
         container.addMessageListener(trackingListenerAdapter, new PatternTopic("tracking:ride:*"));
-
         return container;
     }
 
     @Bean
     public MessageListenerAdapter chatListenerAdapter(RedisChatSubscriber subscriber) {
-        // map method onMessage(String) của subscriber
         return new MessageListenerAdapter(subscriber, "onMessage");
     }
 
