@@ -27,9 +27,6 @@ public class ChatMessageServiceImp implements ChatMessageService {
     private UserRepository userRepository;
 
 
-    @Autowired
-    private RedisChatPublisher redisChatPublisher;
-
     @Override
     @Transactional
     public ChatMessage save(ChatMessage chatMessage) {

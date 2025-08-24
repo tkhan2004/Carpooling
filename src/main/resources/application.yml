@@ -21,8 +21,8 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
-  redis:
-    data:
+  data:
+    redis:
       host: ${REDISHOST}
       port: ${REDISPORT}
       password: ${REDISPASSWORD} # ✅ để đây, không lồng thêm spring
@@ -44,3 +44,7 @@ springdoc:
       activated: true
   default-produces-media-type: application/json
   default-consumes-media-type: application/json
+
+logging:
+  level:
+    org.springframework.data.redis: DEBUG
