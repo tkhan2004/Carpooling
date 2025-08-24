@@ -1,5 +1,9 @@
 package org.example.carpooling.Controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.carpooling.Dto.*;
 import org.example.carpooling.Dto.Request.LoginRequest;
 import org.example.carpooling.Dto.Response.LoginResponse;
@@ -27,6 +31,7 @@ import java.util.Optional;
 @CrossOrigin("*")
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "API xác thực và đăng ký người dùng")
 public class AuthController {
     @Autowired
     UserService userService;
@@ -44,12 +49,24 @@ public class AuthController {
     PasswordEncoder passwordEncoder;
 
 
+    @Operation(summary = "Đăng ký tài khoản hành khách", 
+            description = "Đăng ký tài khoản mới với vai trò hành khách")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Đăng ký thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Email đã tồn tại"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ")
+    })
     @PostMapping(value = "/passenger-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<UserDTO>> passengerRegister(
+            @Parameter(description = "Email đăng nhập") 
             @RequestParam String email,
+            @Parameter(description = "Mật khẩu") 
             @RequestParam @Valid String password,
+            @Parameter(description = "Họ và tên") 
             @RequestParam String fullName,
+            @Parameter(description = "Số điện thoại") 
             @RequestParam String phone,
+            @Parameter(description = "Ảnh đại diện (tùy chọn)") 
             @RequestPart(value = "avatarImage", required = false) MultipartFile avatarImage) {
 
         try {
@@ -64,31 +81,50 @@ public class AuthController {
                     .email(registeredUser.getEmail())
                     .fullName(registeredUser.getFullName()).build();
 
-            ApiResponse<UserDTO> successResponse = new ApiResponse<>(true, "Đăng ký thành công", userDTO);
+            ApiResponse<UserDTO> successResponse = new ApiResponse<>(true, "Đăng ký thành công", HttpStatus.CREATED.value(), userDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(successResponse);
 
         } catch (GlobalException ex) {
-            ApiResponse<UserDTO> errorResponse = new ApiResponse<>(false, ex.getMessage(), null);
+            ApiResponse<UserDTO> errorResponse = new ApiResponse<>(false, ex.getMessage(), HttpStatus.CONFLICT.value(), null);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         } catch (Exception ex) {
-            ApiResponse<UserDTO> errorResponse = new ApiResponse<>(false, "Đăng ký thất bại: " + ex.getMessage(), null);
+            ApiResponse<UserDTO> errorResponse = new ApiResponse<>(false, "Đăng ký thất bại: " + ex.getMessage(), HttpStatus.BAD_REQUEST.value(), null);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
 
+    @Operation(summary = "Đăng ký tài khoản tài xế", 
+            description = "Đăng ký tài khoản mới với vai trò tài xế, bao gồm thông tin xe")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Đăng ký thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Email đã tồn tại"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ")
+    })
     @PostMapping(value = "/driver-register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<DriverDTO>> driverRegister(
+            @Parameter(description = "Email đăng nhập") 
             @RequestParam("email") String email,
+            @Parameter(description = "Số điện thoại") 
             @RequestParam("phone") String phone,
+            @Parameter(description = "Mật khẩu") 
             @RequestParam("password") String password,
+            @Parameter(description = "Họ và tên") 
             @RequestParam("fullName") String fullName,
+            @Parameter(description = "Biển số xe") 
             @RequestParam("licensePlate") String licensePlate,
+            @Parameter(description = "Hãng xe") 
             @RequestParam("brand") String brand,
+            @Parameter(description = "Mẫu xe") 
             @RequestParam("model") String model,
+            @Parameter(description = "Màu xe") 
             @RequestParam("color") String color,
+            @Parameter(description = "Số ghế") 
             @RequestParam("numberOfSeats") Integer numberOfSeats,
+            @Parameter(description = "Ảnh đại diện (tùy chọn)") 
             @RequestPart(value = "avatarImage", required = false) MultipartFile avatarImage,
+            @Parameter(description = "Ảnh giấy phép lái xe (tùy chọn)") 
             @RequestPart(value = "licenseImage", required = false) MultipartFile licenseImage,
+            @Parameter(description = "Ảnh xe (tùy chọn)") 
             @RequestPart(value = "vehicleImage", required = false) MultipartFile vehicleImage
     ) {
         try {
@@ -119,20 +155,28 @@ public class AuthController {
                                         .licenseImageUrl(vehicle != null ? vehicle.getLicenseImageUrl() : null)
                                         .build();
 
-            ApiResponse<DriverDTO> successResponse = new ApiResponse<>(true, "Đăng ký thành công", driverDTO);
+            ApiResponse<DriverDTO> successResponse = new ApiResponse<>(true, "Đăng ký thành công", HttpStatus.CREATED.value(), driverDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(successResponse);
 
         } catch (GlobalException ex) {
-            ApiResponse<DriverDTO> errorResponse = new ApiResponse<>(false, ex.getMessage(), null);
+            ApiResponse<DriverDTO> errorResponse = new ApiResponse<>(false, ex.getMessage(), HttpStatus.CONFLICT.value(), null);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         } catch (Exception ex) {
-            ApiResponse<DriverDTO> errorResponse = new ApiResponse<>(false, "Đăng ký thất bại: " + ex.getMessage(), null);
+            ApiResponse<DriverDTO> errorResponse = new ApiResponse<>(false, "Đăng ký thất bại: " + ex.getMessage(), HttpStatus.BAD_REQUEST.value(), null);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
 
+    @Operation(summary = "Đăng nhập", 
+            description = "Xác thực người dùng và trả về token JWT")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đăng nhập thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Đăng nhập thất bại")
+    })
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<?>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<?>> login(
+            @Parameter(description = "Thông tin đăng nhập") 
+            @RequestBody LoginRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -144,17 +188,17 @@ public class AuthController {
             Optional<Users> optionalUser = userRepository.findByEmail(request.getEmail());
             if (!optionalUser.isPresent()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ApiResponse<>(false, "Người dùng không tồn tại", null));
+                        .body(new ApiResponse<>(false, "Người dùng không tồn tại", HttpStatus.UNAUTHORIZED.value(), null));
             }
 
             Users user = optionalUser.get();
             String token = jwtUtil.generateToken(user.getEmail(), user.getRole().getName());
             LoginResponse loginResponse = new LoginResponse(token, user.getEmail(), user.getRole().getName());
-            ApiResponse<LoginResponse> successResponse = new ApiResponse<>(true, "Đăng nhập thành công", loginResponse);
+            ApiResponse<LoginResponse> successResponse = new ApiResponse<>(true, "Đăng nhập thành công", HttpStatus.OK.value(), loginResponse);
             return ResponseEntity.ok(successResponse);
 
         } catch (Exception e) {
-            ApiResponse<String> errorResponse = new ApiResponse<>(false, "Đăng nhập thất bại: " + e.getMessage(), null);
+            ApiResponse<String> errorResponse = new ApiResponse<>(false, "Đăng nhập thất bại: " + e.getMessage(), HttpStatus.UNAUTHORIZED.value(), null);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
     }

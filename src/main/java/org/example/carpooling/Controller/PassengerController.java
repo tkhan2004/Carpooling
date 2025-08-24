@@ -1,5 +1,9 @@
 package org.example.carpooling.Controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.carpooling.Dto.BookingDTO;
 import org.example.carpooling.Dto.UserDTO;
@@ -23,6 +27,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/passenger")
+@Tag(name = "Passenger", description = "API dành cho hành khách")
 public class PassengerController {
 
     @Autowired
@@ -41,9 +46,17 @@ public class PassengerController {
     NotificationService notificationService;
 
 
+    @Operation(summary = "Lấy danh sách đặt chỗ của hành khách", 
+            description = "Trả về danh sách các đặt chỗ của hành khách đã đăng nhập")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy danh sách thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ")
+    })
     @GetMapping("/bookings")
     @PreAuthorize("hasRole('PASSENGER')")
-    public ResponseEntity<ApiResponse<List<BookingDTO>>> getPassengerBookings(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<List<BookingDTO>>> getPassengerBookings(
+            @Parameter(description = "HTTP request chứa JWT token") 
+            HttpServletRequest request) {
         try {
             String token = jwtUtil.extractTokenFromRequest(request);
             String passengerEmail = jwtUtil.extractUsername(token);
@@ -59,22 +72,31 @@ public class PassengerController {
             String message = String.format("Danh sách bookings của khách hàng (Chờ xác nhận: %d, Đã chấp nhận: %d, Đã hoàn thành: %d)",
                     pendingCount, acceptedCount, completedCount);
 
-            return ResponseEntity.ok(new ApiResponse<>(true, message, bookings));
+            return ResponseEntity.ok(new ApiResponse<>(true, message, HttpStatus.OK.value(), bookings));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi lấy danh sách bookings", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi lấy danh sách bookings", HttpStatus.INTERNAL_SERVER_ERROR.value(), null));
         }
     }
 
+    @Operation(summary = "Lấy thông tin cá nhân hành khách", 
+            description = "Trả về thông tin chi tiết của hành khách đã đăng nhập")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy thông tin thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy người dùng"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ")
+    })
     @GetMapping("/profile")
     @PreAuthorize("hasRole('PASSENGER')")
-    public ResponseEntity<ApiResponse<UserDTO>> getProfile(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<UserDTO>> getProfile(
+            @Parameter(description = "HTTP request chứa JWT token") 
+            HttpServletRequest request) {
         try {
             String token = jwtUtil.extractTokenFromRequest(request);
             String username = jwtUtil.extractUsername(token);
             Optional<Users> users = userRepository.findByEmail(username);
 
             if (users.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(false, "Không tìm thấy người dùng", null));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(false, "Không tìm thấy người dùng", HttpStatus.NOT_FOUND.value(), null));
             }
 
             Users user = users.get();
@@ -85,15 +107,27 @@ public class PassengerController {
                     .phoneNumber(user.getPhone())
                     .role(user.getRole().getName())
                     .build();
-            return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Thông tin người dùng", userDTO));
+            return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "Thông tin người dùng", HttpStatus.OK.value(), userDTO));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi lấy thông tin người dùng", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi lấy thông tin người dùng", HttpStatus.INTERNAL_SERVER_ERROR.value(), null));
         }
     }
 
+    @Operation(summary = "Đặt chỗ cho chuyến đi", 
+            description = "Hành khách đặt chỗ cho một chuyến đi cụ thể")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đặt chỗ thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Đặt chỗ thất bại")
+    })
     @PostMapping("/booking/{rideId}")
     @PreAuthorize("hasAnyRole('PASSENGER')")
-    public ResponseEntity<ApiResponse<BookingDTO>> bookRides(@PathVariable Long rideId, @RequestParam int seats, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<BookingDTO>> bookRides(
+            @Parameter(description = "ID của chuyến đi cần đặt chỗ") 
+            @PathVariable Long rideId, 
+            @Parameter(description = "Số ghế cần đặt") 
+            @RequestParam int seats, 
+            @Parameter(description = "HTTP request chứa JWT token") 
+            HttpServletRequest request) {
         try {
             String token = jwtUtil.extractTokenFromRequest(request);
             String username = jwtUtil.extractUsername(token);
@@ -110,15 +144,25 @@ public class PassengerController {
                     booking.getId()
             ));
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đăng ký chuyến đi thành công", bookingDTO));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đăng ký chuyến đi thành công", HttpStatus.OK.value(), bookingDTO));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Đăng ký chuyến đi thất bại", null));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Đăng ký chuyến đi thất bại", HttpStatus.BAD_REQUEST.value(), null));
         }
     }
 
+    @Operation(summary = "Xác nhận hoàn thành chuyến đi", 
+            description = "Hành khách xác nhận đã hoàn thành chuyến đi")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Xác nhận thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Xác nhận thất bại")
+    })
     @PutMapping("/passenger-confirm/{rideId}")
     @PreAuthorize("hasAnyRole('PASSENGER')")
-    public ResponseEntity<ApiResponse<BookingDTO>> passengerConfirm(@PathVariable Long rideId, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<BookingDTO>> passengerConfirm(
+            @Parameter(description = "ID của chuyến đi cần xác nhận") 
+            @PathVariable Long rideId, 
+            @Parameter(description = "HTTP request chứa JWT token") 
+            HttpServletRequest request) {
         try {
             String token = jwtUtil.extractTokenFromRequest(request);
             String username = jwtUtil.extractUsername(token);
@@ -137,15 +181,27 @@ public class PassengerController {
                 );
             }
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Hành khách đã xác nhận hoàn thành"));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Hành khách đã xác nhận hoàn thành", HttpStatus.OK.value()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Lỗi khi xác nhận"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Lỗi khi xác nhận", HttpStatus.BAD_REQUEST.value()));
         }
     }
 
+    @Operation(summary = "Lấy chi tiết đặt chỗ", 
+            description = "Trả về thông tin chi tiết của một đặt chỗ cụ thể")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy thông tin thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy booking"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ")
+    })
     @GetMapping("/booking/{bookingId}")
     @PreAuthorize("hasRole('PASSENGER')")
-    public ResponseEntity<ApiResponse<BookingDTO>> getBookingDetail(@PathVariable Long bookingId, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<BookingDTO>> getBookingDetail(
+            @Parameter(description = "ID của booking cần xem chi tiết") 
+            @PathVariable Long bookingId, 
+            @Parameter(description = "HTTP request chứa JWT token") 
+            HttpServletRequest request) {
         try {
             String token = jwtUtil.extractTokenFromRequest(request);
             String email = jwtUtil.extractUsername(token);
@@ -153,12 +209,12 @@ public class PassengerController {
             Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
 
             if (bookingOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(false, "Không tìm thấy booking", null));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(false, "Không tìm thấy booking", HttpStatus.NOT_FOUND.value(), null));
             }
 
             Booking booking = bookingOpt.get();
             if (!booking.getPassenger().getEmail().equals(email)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>(false, "Bạn không có quyền truy cập booking này", null));
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>(false, "Bạn không có quyền truy cập booking này", HttpStatus.FORBIDDEN.value(), null));
             }
 
             BookingDTO dto = new BookingDTO(booking);
@@ -182,15 +238,25 @@ public class PassengerController {
                     message = "Chi tiết booking";
             }
 
-            return ResponseEntity.ok(new ApiResponse<>(true, message, dto));
+            return ResponseEntity.ok(new ApiResponse<>(true, message, HttpStatus.OK.value(), dto));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi lấy bookings", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Lỗi khi lấy bookings", HttpStatus.INTERNAL_SERVER_ERROR.value(), null));
         }
     }
 
+    @Operation(summary = "Hủy đặt chỗ", 
+            description = "Hành khách hủy đặt chỗ cho một chuyến đi")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Hủy đặt chỗ thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Hủy đặt chỗ thất bại")
+    })
     @PutMapping("/cancel-bookings/{rideId}")
     @PreAuthorize("hasRole('PASSENGER')")
-    public ResponseEntity<ApiResponse<BookingDTO>> cancelBooking(@PathVariable Long rideId, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<BookingDTO>> cancelBooking(
+            @Parameter(description = "ID của chuyến đi cần hủy đặt chỗ") 
+            @PathVariable Long rideId, 
+            @Parameter(description = "HTTP request chứa JWT token") 
+            HttpServletRequest request) {
         try {
             String token = jwtUtil.extractTokenFromRequest(request);
             String username = jwtUtil.extractUsername(token);
@@ -210,9 +276,9 @@ public class PassengerController {
                 );
             }
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Huỷ chuyến đi thành công", bookingDTO));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Huỷ chuyến đi thành công", HttpStatus.OK.value(), bookingDTO));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Huỷ chuyến đi thất bại", null));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Huỷ chuyến đi thất bại", HttpStatus.BAD_REQUEST.value(), null));
         }
     }
 
