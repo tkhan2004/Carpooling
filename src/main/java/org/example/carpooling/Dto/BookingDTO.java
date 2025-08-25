@@ -5,6 +5,7 @@ import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Status.BookingStatus;
 import org.example.carpooling.Entity.Vehicle;
 
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,6 +39,7 @@ public class BookingDTO {
     private String driverVehicleImageUrl;
     private String driverLicenseImageUrl;
     private String driverStatus;
+    private VehicleDTO vehicle;
 
     // Thông tin hành khách
     private Long passengerId;
@@ -80,7 +82,7 @@ public class BookingDTO {
     }
 
     // Constructor chính
-    public BookingDTO(Booking booking ) {
+    public BookingDTO(Booking booking) {
         // Thông tin đặt chỗ
         this.id = booking.getId();
         this.rideId = booking.getRides().getId();
@@ -102,17 +104,31 @@ public class BookingDTO {
             this.totalPrice = this.pricePerSeat.multiply(BigDecimal.valueOf(this.seatsBooked));
         }
 
-        // Thông tin tài xế
-        if (booking.getRides().getDriver() != null) {
-            Vehicle vehicle = booking.getRides().getDriver().getVehicles().get(0);
+        // Thông tin tài xế + Vehicle
+        if (booking.getRides().getDriver() != null
+                && !booking.getRides().getDriver().getVehicles().isEmpty()) {
+
+            Vehicle vehicleEntity = booking.getRides().getDriver().getVehicles().get(0);
+
             this.driverId = booking.getRides().getDriver().getId();
             this.driverName = booking.getRides().getDriver().getFullName();
             this.driverPhone = booking.getRides().getDriver().getPhone();
             this.driverEmail = booking.getRides().getDriver().getEmail();
             this.driverStatus = booking.getRides().getDriver().getStatus().toString();
             this.driverAvatarUrl = booking.getRides().getDriver().getAvatarImage();
-            this.driverVehicleImageUrl = vehicle.getVehicleImageUrl();
-            this.driverLicenseImageUrl = vehicle.getLicenseImageUrl();
+
+            // Thay vì lấy từng field -> map VehicleDTO
+            this.vehicle = new VehicleDTO(
+                    vehicleEntity.getLicensePlate(),
+                    vehicleEntity.getBrand(),
+                    vehicleEntity.getModel(),
+                    vehicleEntity.getColor(),
+                    vehicleEntity.getNumberOfSeats(),
+                    vehicleEntity.getVehicleImageUrl(),
+                    vehicleEntity.getLicenseImageUrl(),
+                    vehicleEntity.getLicenseImagePublicId(),
+                    vehicleEntity.getVehicleImagePublicId()
+            );
         }
 
         // Thông tin hành khách
