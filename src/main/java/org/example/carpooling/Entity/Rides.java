@@ -1,5 +1,6 @@
 package org.example.carpooling.Entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import org.example.carpooling.Entity.Status.RideStatus;
 
@@ -207,6 +208,7 @@ public class Rides {
     private String destination;   // tên địa điểm đến ngắn
 
     @Column(name = "start_time")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startTime;
 
     @Column(name = "price_per_seat")

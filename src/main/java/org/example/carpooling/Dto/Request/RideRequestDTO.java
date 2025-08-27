@@ -1,5 +1,6 @@
 package org.example.carpooling.Dto.Request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.*;
@@ -70,6 +71,7 @@ public class RideRequestDTO {
 
 
     @NotNull(message = "Thời gian không để trống")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startTime;
 
     @NotNull(message = "Giá mỗi ghế không được để trống")
