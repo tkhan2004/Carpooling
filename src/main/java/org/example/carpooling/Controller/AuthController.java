@@ -76,10 +76,16 @@ public class AuthController {
             password = password.trim().replaceAll(",$", "").replaceAll(" ", "");
 
 
-            Users registeredUser = userService.passengerRegister(email, password, fullName, phone, avatarImage);
+            Users registeredUser = userService.passengerRegister(email, phone, password, fullName, avatarImage);
+
             UserDTO userDTO = UserDTO.builder()
+                    .id(registeredUser.getId())
+                    .avatarUrl(registeredUser.getAvatarImage()) // giả sử entity có field này
+                    .fullName(registeredUser.getFullName())
                     .email(registeredUser.getEmail())
-                    .fullName(registeredUser.getFullName()).build();
+                    .phoneNumber(registeredUser.getPhone())
+                    .role(registeredUser.getRole().getName()) // nếu có bảng Role quan hệ
+                    .build();
 
             ApiResponse<UserDTO> successResponse = new ApiResponse<>(true, "Đăng ký thành công", HttpStatus.CREATED.value(), userDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(successResponse);
