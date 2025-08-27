@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
+
 public class BookingDTO {
     // Thông tin đặt chỗ
     private Long id;
@@ -36,8 +36,6 @@ public class BookingDTO {
     private String driverPhone;
     private String driverEmail;
     private String driverAvatarUrl;
-    private String driverVehicleImageUrl;
-    private String driverLicenseImageUrl;
     private String driverStatus;
     private VehicleDTO vehicle;
 
@@ -49,33 +47,9 @@ public class BookingDTO {
     private String passengerAvatarUrl;
 
     // Thông tin các hành khách cùng chuyến
-    private List<PassengerInfo> fellowPassengers;
+    private List<PassengerInfoDTO> fellowPassengers;
 
-    // Lớp để lưu thông tin về các hành khách cùng chuyến
-    public static class PassengerInfo {
-        private Long id;
-        private String name;
-        private String phone;
-        private String email;
-        private String avatarUrl;
-        private BookingStatus status;
-        private int seatsBooked;
 
-        public PassengerInfo(Booking booking) {
-            this.id = booking.getPassenger().getId();
-            this.name = booking.getPassenger().getFullName();
-            this.phone = booking.getPassenger().getPhone();
-            this.email = booking.getPassenger().getEmail();
-            this.avatarUrl = booking.getPassenger().getAvatarImage();
-            this.status = booking.getStatus();
-            this.seatsBooked = booking.getSeatsBooked();
-        }
-
-        // Constructor mặc định
-        public PassengerInfo() {
-        }
-
-    }
 
     // Constructor mặc định
     public BookingDTO() {

@@ -16,4 +16,5 @@ public interface BookingService {
     public List<BookingDTO> getBookingsForPassengerByStatus(String passengerEmail, List<BookingStatus> statuses);
     public List<BookingDTO> getBookingsForDriverByStatus(String driverEmail, List<BookingStatus> statuses);
 
+
 }

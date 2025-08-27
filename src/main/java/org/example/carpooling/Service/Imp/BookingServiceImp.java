@@ -2,6 +2,7 @@ package org.example.carpooling.Service.Imp;
 
 import jakarta.transaction.Transactional;
 import org.example.carpooling.Dto.BookingDTO;
+import org.example.carpooling.Dto.PassengerInfoDTO;
 import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Rides;
 import org.example.carpooling.Entity.Status.BookingStatus;
@@ -70,41 +71,27 @@ public class BookingServiceImp implements BookingService {
 
     @Override
     public BookingDTO passengerConfirm(Long rideId, String email) {
-        Users passenger = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy hành khách"));
+        // Tìm booking gần nhất chưa bị hủy của hành khách cho chuyến đi này
+        Booking booking = bookingRepository.findTopByRides_IdAndPassenger_EmailAndStatusNot(
+                        rideId, email, BookingStatus.CANCELLED)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy booking hợp lệ cho hành khách này"));
 
-        List<Booking> bookings = bookingRepository.findByRides_IdAndPassenger_Email(rideId, email)
-                .stream()
-                .filter(booking -> booking.getStatus() != BookingStatus.CANCELLED)
-                .sorted(Comparator.comparing(Booking::getId).reversed())
-                .collect(Collectors.toList());
-
-
-        if (bookings.isEmpty()) {
-            throw new RuntimeException("Không tìm thấy booking cho hành khách này");
+        // Chỉ cho phép xác nhận khi chuyến đi đang diễn ra
+        if (booking.getStatus() != BookingStatus.IN_PROGRESS && booking.getStatus() != BookingStatus.DRIVER_CONFIRMED) {
+            throw new IllegalStateException("Không thể xác nhận hoàn thành khi booking không ở trạng thái IN_PROGRESS hoặc DRIVER_CONFIRMED.");
         }
-
-        Booking booking = bookings.get(0);
 
         // Xử lý trạng thái xác nhận
         if (booking.getStatus() == BookingStatus.DRIVER_CONFIRMED) {
             booking.setStatus(BookingStatus.COMPLETED);
-        } else if (booking.getStatus() == BookingStatus.IN_PROGRESS || booking.getStatus() == BookingStatus.PENDING) {
+        } else { // booking.getStatus() == BookingStatus.IN_PROGRESS
             booking.setStatus(BookingStatus.PASSENGER_CONFIRMED);
         }
 
         bookingRepository.save(booking);
 
-        // Nếu tất cả booking đã hoàn tất => set ride thành COMPLETED
-        List<Booking> allBookings = bookingRepository.findByRidesId(rideId);
-        boolean allCompleted = allBookings.stream()
-                .allMatch(b -> b.getStatus() == BookingStatus.COMPLETED);
-
-        if (allCompleted) {
-            Rides ride = booking.getRides();
-            ride.setStatus(RideStatus.COMPLETED);
-            rideRepository.save(ride);
-        }
+        // Kiểm tra và cập nhật trạng thái của Ride sau khi booking thay đổi
+        updateRideStatusAfterBookingChange(rideId);
 
         return new BookingDTO(booking);
     }
@@ -114,31 +101,70 @@ public class BookingServiceImp implements BookingService {
         Rides ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chuyến đi"));
 
-        List<Booking> bookings = bookingRepository.findByRidesId(rideId);
-
-        if (bookings.isEmpty()) {
-            throw new RuntimeException("Không có hành khách nào trong chuyến đi này");
+        // Chỉ cho phép tài xế xác nhận khi chuyến đi đang diễn ra
+        if (ride.getStatus() != RideStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Không thể xác nhận hoàn thành khi chuyến đi không ở trạng thái IN_PROGRESS.");
         }
 
+        List<Booking> bookings = bookingRepository.findByRidesIdAndStatusNot(rideId, BookingStatus.CANCELLED);
+
+        if (bookings.isEmpty()) {
+            // Nếu không có booking nào, chuyến đi có thể được xem là hoàn thành ngay lập tức
+            ride.setStatus(RideStatus.COMPLETED);
+            rideRepository.save(ride);
+            return; // Kết thúc sớm
+        }
+
+        // Lặp qua các booking hợp lệ và cập nhật trạng thái
         for (Booking booking : bookings) {
             if (booking.getStatus() == BookingStatus.PASSENGER_CONFIRMED) {
                 booking.setStatus(BookingStatus.COMPLETED);
-            } else if (booking.getStatus() == BookingStatus.IN_PROGRESS || booking.getStatus() == BookingStatus.PENDING) {
+            } else if (booking.getStatus() == BookingStatus.IN_PROGRESS) {
                 booking.setStatus(BookingStatus.DRIVER_CONFIRMED);
             }
             bookingRepository.save(booking);
         }
 
-        boolean allActive = bookings.stream()
-                .filter(b -> b.getStatus() != BookingStatus.CANCELLED) // Bỏ qua các booking đã hủy
-                .allMatch(b -> b.getStatus() == BookingStatus.COMPLETED);
+        // Kiểm tra và cập nhật trạng thái cuối cùng của Ride
+        updateRideStatusAfterBookingChange(rideId);
+    }
 
-        if (allActive) {
+    /**
+     * Hàm helper để kiểm tra tất cả booking (không bị hủy) của một chuyến đi
+     * và cập nhật trạng thái của chuyến đi đó thành COMPLETED hoặc WAITING_CONFIRMATION.
+     *
+     * @param rideId ID của chuyến đi cần kiểm tra.
+     */
+    private void updateRideStatusAfterBookingChange(Long rideId) {
+        Rides ride = rideRepository.findById(rideId).orElseThrow(() -> new RuntimeException("Không tìm thấy chuyến đi"));
+        List<Booking> allBookingsForRide = bookingRepository.findByRidesId(rideId);
+
+        // Lọc ra các booking không bị hủy để kiểm tra
+        List<Booking> activeBookings = allBookingsForRide.stream()
+                .filter(b -> b.getStatus() != BookingStatus.CANCELLED && b.getStatus() != BookingStatus.REJECTED)
+                .collect(Collectors.toList());
+
+        // Nếu không có booking nào đang hoạt động, coi như chuyến đi hoàn thành
+        if (activeBookings.isEmpty()) {
             ride.setStatus(RideStatus.COMPLETED);
-        } else {
-            ride.setStatus(RideStatus.DRIVER_CONFIRMED);
+            rideRepository.save(ride);
+            return;
         }
 
+        // KIỂM TRA LOGIC: Chỉ coi là hoàn thành nếu TẤT CẢ booking đang hoạt động đã COMPLETED
+        boolean allBookingsCompleted = activeBookings.stream()
+                .allMatch(b -> b.getStatus() == BookingStatus.COMPLETED);
+
+        if (allBookingsCompleted) {
+            ride.setStatus(RideStatus.COMPLETED);
+        } else {
+            // Nếu có ít nhất một booking chưa xong, nhưng tài xế đã xác nhận (hàm driverMarkCompleted đã chạy)
+            // thì trạng thái của Ride nên là WAITING_CONFIRMATION
+            // Ta có thể kiểm tra trạng thái hiện tại của ride để tránh đặt lại không cần thiết
+            if(ride.getStatus() == RideStatus.IN_PROGRESS) {
+                ride.setStatus(RideStatus.DRIVER_CONFIRMED);
+            }
+        }
         rideRepository.save(ride);
     }
 
@@ -258,9 +284,9 @@ public class BookingServiceImp implements BookingService {
 
             // Thêm danh sách hành khách cùng chuyến, BAO GỒM tất cả trạng thái
             List<Booking> sameRideBookings = rideToBookingsMap.get(booking.getRides().getId());
-            List<BookingDTO.PassengerInfo> fellowPassengers = sameRideBookings.stream()
+            List<PassengerInfoDTO> fellowPassengers = sameRideBookings.stream()
                     .filter(b -> !b.getId().equals(booking.getId())) // Loại trừ booking hiện tại
-                    .map(b -> new BookingDTO.PassengerInfo(b))
+                    .map(b -> new PassengerInfoDTO(b))
                     .collect(Collectors.toList());
 
             dto.setFellowPassengers(fellowPassengers);
@@ -297,10 +323,10 @@ public class BookingServiceImp implements BookingService {
 
             // Thêm danh sách hành khách cùng chuyến, BAO GỒM tất cả trạng thái
             List<Booking> sameRideBookings = rideToBookingsMap.get(booking.getRides().getId());
-            List<BookingDTO.PassengerInfo> fellowPassengers = sameRideBookings.stream()
+            List<PassengerInfoDTO> fellowPassengers = sameRideBookings.stream()
                     .filter(b -> !b.getId().equals(booking.getId())) // Loại trừ booking hiện tại
-                    .map(b -> new BookingDTO.PassengerInfo(b))
-                    .collect(Collectors.toList());
+                    .map(b -> new PassengerInfoDTO(b))
+                    .collect(Collectors.toList()).reversed();
 
             dto.setFellowPassengers(fellowPassengers);
             return dto;
