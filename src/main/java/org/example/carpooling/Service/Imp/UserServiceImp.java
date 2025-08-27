@@ -68,9 +68,9 @@ public class UserServiceImp implements UserService {
         }
 
         // Lấy role từ DB
-        Role driverRole = roleRepository.findById(3L)
+        Role passengerRole = roleRepository.findById(3L)
                 .orElseThrow(() -> new RuntimeException("Driver role not found"));
-        user.setRole(driverRole);
+        user.setRole(passengerRole);
 
 
         userRepository.save(user);

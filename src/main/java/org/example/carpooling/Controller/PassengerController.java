@@ -102,6 +102,7 @@ public class PassengerController {
             Users user = users.get();
             UserDTO userDTO = UserDTO.builder()
                     .id(user.getId())
+                    .avatarUrl(user.getAvatarImage())
                     .email(user.getEmail())
                     .fullName(user.getFullName())
                     .phoneNumber(user.getPhone())
