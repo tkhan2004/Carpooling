@@ -3,6 +3,8 @@ server:
   port: ${PORT:8080}
 
 spring:
+  jackson:
+    time-zone: Asia/Ho_Chi_Minh
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -48,3 +50,4 @@ springdoc:
 logging:
   level:
     org.springframework.data.redis: DEBUG
+
