@@ -84,17 +84,22 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // IMPORTANT: Specify the exact origin of your frontend
-        configuration.setAllowedOrigins(Arrays.asList("http://127.0.0.1:5500","http://127.0.0.1:5502", "http://localhost:5500","http://localhost:55668","http://localhost:63342", "https://carpooling-j5xn.onrender.com" ));
-        // Specify allowed methods (including OPTIONS for preflight)
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://127.0.0.1:5500",
+                "http://127.0.0.1:5502",
+                "http://localhost:5500",
+                "http://localhost:55668",
+                "http://localhost:63342",
+                "https://carpooling-j5xn.onrender.com"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With"));
-        // Dòng này quan trọng - thay đổi thành false
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(Arrays.asList("*")); // cho an toàn
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Disposition"));
+        configuration.setAllowCredentials(true); // ok vì bạn đã chỉ rõ origin
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Apply this configuration to all paths - you can restrict it if needed e.g., "/api/**"
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }
