@@ -90,7 +90,8 @@ public class SecurityConfig {
                 "http://localhost:5500",
                 "http://localhost:55668",
                 "http://localhost:63342",
-                "https://carpooling-j5xn.onrender.com"
+                "https://carpooling-j5xn.onrender.com",
+                "https://carpooling-admin-nine.vercel.app"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*")); // cho an toàn
