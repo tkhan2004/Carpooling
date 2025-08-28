@@ -63,14 +63,15 @@ public class PassengerController {
             List<BookingDTO> bookings = bookingService.getBookingsForPassenger(passengerEmail);
 
             long pendingCount = bookings.stream().filter(b -> b.getStatus() == BookingStatus.PENDING).count();
+            long inGoing = bookings.stream().filter(b -> b.getStatus() == BookingStatus.IN_PROGRESS).count();
             long acceptedCount = bookings.stream().filter(b -> b.getStatus() == BookingStatus.ACCEPTED).count();
             long completedCount = bookings.stream().filter(b ->
                     b.getStatus() == BookingStatus.PASSENGER_CONFIRMED ||
                             b.getStatus() == BookingStatus.DRIVER_CONFIRMED ||
                             b.getStatus() == BookingStatus.COMPLETED).count();
 
-            String message = String.format("Danh sách bookings của khách hàng (Chờ xác nhận: %d, Đã chấp nhận: %d, Đã hoàn thành: %d)",
-                    pendingCount, acceptedCount, completedCount);
+            String message = String.format("Danh sách bookings của khách hàng (Chờ xác nhận: %d, Đã chấp nhận: %d, Đang đi: %d ,Đã hoàn thành: %d)",
+                    pendingCount, acceptedCount, inGoing,completedCount);
 
             return ResponseEntity.ok(new ApiResponse<>(true, message, HttpStatus.OK.value(), bookings));
         } catch (Exception e) {
