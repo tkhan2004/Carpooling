@@ -82,9 +82,11 @@ public class BookingServiceImp implements BookingService {
         }
 
         // Xử lý trạng thái xác nhận
-        if (booking.getStatus() == BookingStatus.DRIVER_CONFIRMED) {
+
+        if (booking.getStatus() == BookingStatus.DRIVER_CONFIRMED
+                || booking.getRides().getStatus() == RideStatus.DRIVER_CONFIRMED) {
             booking.setStatus(BookingStatus.COMPLETED);
-        } else { // booking.getStatus() == BookingStatus.IN_PROGRESS
+        } else {
             booking.setStatus(BookingStatus.PASSENGER_CONFIRMED);
         }
 
@@ -136,35 +138,37 @@ public class BookingServiceImp implements BookingService {
      * @param rideId ID của chuyến đi cần kiểm tra.
      */
     private void updateRideStatusAfterBookingChange(Long rideId) {
-        Rides ride = rideRepository.findById(rideId).orElseThrow(() -> new RuntimeException("Không tìm thấy chuyến đi"));
-        List<Booking> allBookingsForRide = bookingRepository.findByRidesId(rideId);
+        Rides ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy chuyến đi"));
 
-        // Lọc ra các booking không bị hủy để kiểm tra
-        List<Booking> activeBookings = allBookingsForRide.stream()
+        List<Booking> activeBookings = bookingRepository.findByRidesId(rideId).stream()
                 .filter(b -> b.getStatus() != BookingStatus.CANCELLED && b.getStatus() != BookingStatus.REJECTED)
                 .collect(Collectors.toList());
 
-        // Nếu không có booking nào đang hoạt động, coi như chuyến đi hoàn thành
         if (activeBookings.isEmpty()) {
             ride.setStatus(RideStatus.COMPLETED);
-            rideRepository.save(ride);
-            return;
-        }
-
-        // KIỂM TRA LOGIC: Chỉ coi là hoàn thành nếu TẤT CẢ booking đang hoạt động đã COMPLETED
-        boolean allBookingsCompleted = activeBookings.stream()
-                .allMatch(b -> b.getStatus() == BookingStatus.COMPLETED);
-
-        if (allBookingsCompleted) {
-            ride.setStatus(RideStatus.COMPLETED);
         } else {
-            // Nếu có ít nhất một booking chưa xong, nhưng tài xế đã xác nhận (hàm driverMarkCompleted đã chạy)
-            // thì trạng thái của Ride nên là WAITING_CONFIRMATION
-            // Ta có thể kiểm tra trạng thái hiện tại của ride để tránh đặt lại không cần thiết
-            if(ride.getStatus() == RideStatus.IN_PROGRESS) {
-                ride.setStatus(RideStatus.DRIVER_CONFIRMED);
+            boolean allCompleted = activeBookings.stream()
+                    .allMatch(b -> b.getStatus() == BookingStatus.COMPLETED);
+
+            if (allCompleted) {
+                // Nếu tất cả booking xong → ride hoàn thành
+                ride.setStatus(RideStatus.COMPLETED);
+            } else {
+                // Nếu chưa xong nhưng có booking driver đã confirm → ride ở DRIVER_CONFIRMED
+                boolean anyDriverConfirmed = activeBookings.stream()
+                        .anyMatch(b -> b.getStatus() == BookingStatus.DRIVER_CONFIRMED
+                                || b.getStatus() == BookingStatus.COMPLETED);
+
+                if (anyDriverConfirmed) {
+                    ride.setStatus(RideStatus.DRIVER_CONFIRMED);
+                } else {
+                    // Nếu tất cả vẫn đang IN_PROGRESS → giữ IN_PROGRESS
+                    ride.setStatus(RideStatus.IN_PROGRESS);
+                }
             }
         }
+
         rideRepository.save(ride);
     }
 
@@ -185,6 +189,7 @@ public class BookingServiceImp implements BookingService {
         }
 
         ride.setAvailableSeats(remainingSeats);
+
         rideRepository.save(ride);
 
         if(booking.getStatus() == BookingStatus.REJECTED){

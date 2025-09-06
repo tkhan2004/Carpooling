@@ -28,10 +28,10 @@ public class RideRequestDTO {
     @NotBlank(message=" Điểm khởi hành không được để trống")
     private String departure;
 
-    @NotBlank(message=" Điểm khởi hành không được để trống")
+    @NotNull(message=" Điểm khởi hành không được để trống")
     private Double startLat;
 
-    @NotBlank(message=" Điểm khởi hành không được để trống")
+    @NotNull(message=" Điểm khởi hành không được để trống")
     private Double startLng;
 
     @NotBlank(message=" Điểm khởi hành không được để trống")
@@ -47,10 +47,10 @@ public class RideRequestDTO {
     private String startProvince;
 
     // ====== Điểm đến ======
-    @NotBlank(message=" Điểm đến không được để trống")
+    @NotNull(message=" Điểm đến không được để trống")
     private Double endLat;
 
-    @NotBlank(message=" Điểm đến không được để trống")
+    @NotNull(message=" Điểm đến không được để trống")
     private Double endLng;
 
     @NotBlank(message=" Điểm đến không được để trống")

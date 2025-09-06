@@ -12,15 +12,14 @@ public class ChatMessageDTO {
     private String senderEmail;     // email người gửi
     private String receiverEmail;   // email người nhận
 
-    public ChatMessageDTO(ChatMessage message  ) {
-        this.token = token;
-        this.senderEmail = senderEmail;
-        this.receiverEmail = receiverEmail;
-        this.senderName = senderName;
-        this.content = content;
-        this.roomId = roomId;
-        this.timestamp = timestamp;
-        this.isRead = isRead;
+    public ChatMessageDTO(ChatMessage message) {
+        this.senderEmail = message.getSenderEmail();
+        this.receiverEmail = message.getReceiverEmail();
+        this.content = message.getContent();
+        this.roomId = message.getRoomId();
+        this.timestamp = message.getTimestamp();
+        this.isRead = message.isRead();
+        // token and senderName will be set separately
     }
 
     private String senderName;      // tên người gửi

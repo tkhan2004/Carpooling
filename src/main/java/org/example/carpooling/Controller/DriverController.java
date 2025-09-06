@@ -96,7 +96,7 @@ public class DriverController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ")
     })
     @GetMapping("/my-rides")
-    @PreAuthorize(("hasRole('DRIVER')"))
+    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<ApiResponse<List<RideRequestDTO>>> getRide(
             @Parameter(description = "HTTP request chứa JWT token") 
             HttpServletRequest request) {
