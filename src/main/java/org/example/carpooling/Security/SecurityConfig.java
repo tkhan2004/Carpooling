@@ -93,6 +93,12 @@ public class SecurityConfig {
                 "https://carpooling-j5xn.onrender.com",
                 "https://carpooling-admin-nine.vercel.app"
         ));
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "http://192.168.*.*:*",  // Cho mobile testing
+                "http://10.*.*.*:*"      // Cho mobile testing
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*")); // cho an toàn
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Disposition"));

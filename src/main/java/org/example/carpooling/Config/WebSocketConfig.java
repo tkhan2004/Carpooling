@@ -9,16 +9,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Cho phép kết nối từ frontend (mobile/web) qua SockJS
-//        registry.addEndpoint("/ws")
-//                .setAllowedOriginPatterns("*")// Cho phép mọi origin trong môi trường dev
-//                .withSockJS();
-
+        // WebSocket endpoint thông thường (KHÔNG dùng .withSockJS())
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://127.0.0.1:5500") // Live Server VS Code
-                .withSockJS();
+                .setAllowedOriginPatterns("*"); // Cho phép tất cả origins
     }
 
     @Override

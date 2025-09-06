@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,6 +57,7 @@ public class ChatController {
     @Operation(summary = "Xử lý tin nhắn WebSocket", 
             description = "Xử lý tin nhắn gửi qua WebSocket, lưu vào cơ sở dữ liệu và phát hành qua Redis")
     @MessageMapping("/chat/{roomId}")
+    @SendTo("/topic/chat/{roomId}")
     public ChatMessageDTO processMessage(
             @Parameter(description = "ID của phòng chat") 
             @DestinationVariable String roomId, 
@@ -93,6 +95,14 @@ public class ChatController {
                     saved.isRead()
             );
             redisChatPublisher.publish(payload);
+            System.out.println("🔌 Spring Boot: Received message for room: " + roomId);
+            System.out.println("🔌 Spring Boot: Message content: " + messageDTO.getContent());
+            System.out.println("🔌 Spring Boot: Sender: " + messageDTO.getSenderEmail());
+
+            // ... existing code ...
+
+            System.out.println("🔌 Spring Boot: Sending to topic: /topic/chat/" + roomId);
+            System.out.println("🔌 Spring Boot: Message to send: " + messageDTO.getContent());
 
             return messageDTO;
         } catch (Exception e) {
