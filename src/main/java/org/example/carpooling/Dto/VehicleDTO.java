@@ -15,4 +15,13 @@ public class VehicleDTO {
     private String licenseImageUrl;
     private String licenseImagePublicId;
     private String vehicleImagePublicId;
+
+    public VehicleDTO(String licensePlate, String brand, String model, String color, Integer numberOfSeats, String vehicleImageUrl) {
+        this.licensePlate = licensePlate;
+        this.brand = brand;
+        this.model = model;
+        this.color = color;
+        this.numberOfSeats = numberOfSeats;
+        this.vehicleImageUrl = vehicleImageUrl;
+    }
 }
