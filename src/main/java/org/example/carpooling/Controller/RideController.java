@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.carpooling.Dto.Request.RideRequestDTO;
+import org.example.carpooling.Dto.Response.RideResponseDTO;
 import org.example.carpooling.Helper.JwtUtil;
 import org.example.carpooling.Payload.ApiResponse;
 import org.example.carpooling.Service.RideService;
@@ -104,12 +105,13 @@ public class RideController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Chuyến đi không tồn tại"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi khi lấy thông tin chuyến đi")
     })
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> getRideById(@PathVariable Long id, HttpServletRequest request) {
         try {
             String token = jwtUtil.extractTokenFromRequest(request);
             String email = jwtUtil.extractUsername(token);
-            RideRequestDTO rides = rideService.findDetailRideById(id);
+            RideResponseDTO rides = rideService.findDetailRideById(id);
 
             if (rides == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(false, "Chuyến đi không tồn tại", HttpStatus.NOT_FOUND.value(), null));
