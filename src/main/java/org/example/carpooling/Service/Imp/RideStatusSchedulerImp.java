@@ -36,9 +36,14 @@ public class RideStatusSchedulerImp implements RideStatusScheduler {
         }
         bookingRepository.saveAll(bookings);
         List<Rides> rides = rideRepository.findRidesByStatus(RideStatus.ACTIVE);
+
         for ( Rides ride : rides ) {
             if (ride.getStartTime().isBefore(now)){
-                ride.setStatus(RideStatus.IN_PROGRESS);
+                if (ride.getBookings() == null || ride.getBookings().isEmpty()) {
+                    ride.setStatus(RideStatus.COMPLETED);
+                }else {
+                    ride.setStatus(RideStatus.IN_PROGRESS);
+                }
             }
         }
         rideRepository.saveAll(rides);

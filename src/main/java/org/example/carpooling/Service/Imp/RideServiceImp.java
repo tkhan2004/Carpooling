@@ -136,16 +136,22 @@ import java.util.stream.Collectors;
 
     @Override
     public RideResponseDTO findDetailRideById(Long rideId) {
-        Rides ride = rideRepository.findDetailRideById(rideId);
+        Rides ride = rideRepository.findRideWithDriverAndVehicle(rideId);
 
-        VehicleDTO vehicle = ride.getDriver() != null && !ride.getDriver().getVehicles().isEmpty()
+
+        Users driver = ride.getDriver();
+        Vehicle vehicle = (driver != null && driver.getVehicles() != null && !driver.getVehicles().isEmpty())
+                ? driver.getVehicles().get(0)
+                : null;
+
+        VehicleDTO vehicleDTO = (vehicle != null)
                 ? new VehicleDTO(
-                ride.getDriver().getVehicles().get(0).getLicensePlate(),
-                ride.getDriver().getVehicles().get(0).getBrand(),
-                ride.getDriver().getVehicles().get(0).getModel(),
-                ride.getDriver().getVehicles().get(0).getColor(),
-                ride.getDriver().getVehicles().get(0).getNumberOfSeats(),
-                ride.getDriver().getVehicles().get(0).getVehicleImageUrl()
+                vehicle.getLicensePlate(),
+                vehicle.getBrand(),
+                vehicle.getModel(),
+                vehicle.getColor(),
+                vehicle.getNumberOfSeats(),
+                vehicle.getVehicleImageUrl()
         )
                 : null;
 
@@ -155,7 +161,7 @@ import java.util.stream.Collectors;
                 ride.getAvailableSeats(),
                 ride.getDriver() != null ? ride.getDriver().getFullName() : null,
                 ride.getDriver() != null ? ride.getDriver().getEmail() : null,
-                vehicle,
+                vehicleDTO,
 
 
                 // Điểm đi

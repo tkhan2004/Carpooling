@@ -24,4 +24,5 @@ public class VehicleDTO {
         this.numberOfSeats = numberOfSeats;
         this.vehicleImageUrl = vehicleImageUrl;
     }
+
 }

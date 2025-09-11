@@ -24,6 +24,12 @@ public interface RideRepository extends JpaRepository<Rides, Long> {
             "FROM Rides r WHERE r.status = 'ACTIVE'")
     List<RideRequestDTO> findAllRidesByStatus();
 
+    @Query("SELECT r FROM Rides r " +
+            "JOIN FETCH r.driver d " +
+            "LEFT JOIN FETCH Vehicle v ON v.driver = d " +
+            "WHERE r.id = :rideId")
+    Rides findRideWithDriverAndVehicle(@Param("rideId") Long rideId);
+
     Rides findDetailRideById(Long rideId);
 
     Rides findCancelRideById(Long rideId);
