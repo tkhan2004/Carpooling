@@ -44,4 +44,6 @@ BookingRepository extends JpaRepository<Booking,Long> {
             Long rideId, String passengerEmail, BookingStatus status);
     List<Booking> findByRidesIdAndStatusNot(Long rideId, BookingStatus status);
 
+    List<Booking> findBookingsByRidesId(Long rideId);
+
 }

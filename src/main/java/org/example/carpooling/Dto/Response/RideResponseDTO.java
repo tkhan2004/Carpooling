@@ -6,6 +6,7 @@ import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.example.carpooling.Dto.VehicleDTO;
+import org.example.carpooling.Dto.VehicleRideDTO;
 import org.example.carpooling.Entity.Status.RideStatus;
 
 import javax.validation.constraints.Min;
@@ -24,7 +25,7 @@ public class RideResponseDTO {
 
     private String driverEmail;
 
-    VehicleDTO vehicle;
+    VehicleRideDTO vehicle;
 
     // ====== Điểm đi ======
     private String departure;

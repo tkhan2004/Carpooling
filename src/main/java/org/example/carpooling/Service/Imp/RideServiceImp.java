@@ -3,7 +3,10 @@ package org.example.carpooling.Service.Imp;
 import org.example.carpooling.Dto.Request.RideRequestDTO;
 import org.example.carpooling.Dto.Response.RideResponseDTO;
 import org.example.carpooling.Dto.VehicleDTO;
+import org.example.carpooling.Dto.VehicleRideDTO;
+import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Rides;
+import org.example.carpooling.Entity.Status.BookingStatus;
 import org.example.carpooling.Entity.Status.DriverStatus;
 import org.example.carpooling.Entity.Status.RideStatus;
 import org.example.carpooling.Entity.Users;
@@ -144,8 +147,8 @@ import java.util.stream.Collectors;
                 ? driver.getVehicles().get(0)
                 : null;
 
-        VehicleDTO vehicleDTO = (vehicle != null)
-                ? new VehicleDTO(
+        VehicleRideDTO vehicleDTO = (vehicle != null)
+                ? new VehicleRideDTO(
                 vehicle.getLicensePlate(),
                 vehicle.getBrand(),
                 vehicle.getModel(),
@@ -204,6 +207,15 @@ import java.util.stream.Collectors;
 
         ride.setStatus(RideStatus.CANCELLED);
         rideRepository.save(ride);
+
+        // Hủy tất cả booking liên quan đến chuyến đi này
+        List<Booking> bookings = bookingRepository.findBookingsByRidesId(rideId);
+        for (Booking booking : bookings) {
+            if (!"CANCELLED".equals(booking.getStatus())) {
+                booking.setStatus(BookingStatus.CANCELLED); // hoặc DRIVER_CANCELLED
+                bookingRepository.save(booking);
+            }
+        }
 
         // Cập nhật đối tượng DTO với các giá trị mới nhất từ entity Ride
         RideRequestDTO dto = new RideRequestDTO(
