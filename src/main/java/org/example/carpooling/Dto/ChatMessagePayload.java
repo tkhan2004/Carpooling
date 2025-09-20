@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class ChatMessagePayload {
     private String roomId;
     private String senderEmail;
+    private String senderName;
     private String receiverEmail;
     private String content;
     private LocalDateTime timestamp;

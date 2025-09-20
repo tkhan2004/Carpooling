@@ -14,6 +14,7 @@ import org.example.carpooling.Payload.ApiResponse;
 import org.example.carpooling.Repository.ChatMessageRepository;
 import org.example.carpooling.Repository.UserRepository;
 import org.example.carpooling.Service.ChatMessageService;
+import org.example.carpooling.Service.NotificationService;
 import org.example.carpooling.Service.RedisService.RedisChatPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -54,6 +55,9 @@ public class ChatController {
     @Autowired
     private RedisChatPublisher redisChatPublisher;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @Operation(summary = "Xử lý tin nhắn WebSocket", 
             description = "Xử lý tin nhắn gửi qua WebSocket, lưu vào cơ sở dữ liệu và phát hành qua Redis")
     @MessageMapping("/chat/{roomId}")
@@ -89,12 +93,22 @@ public class ChatController {
             ChatMessagePayload payload = new ChatMessagePayload(
                     saved.getRoomId(),
                     saved.getSenderEmail(),
+                    sender.getFullName(),
                     saved.getReceiverEmail(),
                     saved.getContent(),
                     saved.getTimestamp(),
                     saved.isRead()
             );
             redisChatPublisher.publish(payload);
+
+            notificationService.sendNotification(
+                    saved.getReceiverEmail(),
+                    "Tin nhắn mới từ " + sender.getFullName(),
+                    saved.getContent(),
+                    "NEW_MESSAGE",
+                    saved.getId()
+            );
+
             System.out.println("🔌 Spring Boot: Received message for room: " + roomId);
             System.out.println("🔌 Spring Boot: Message content: " + messageDTO.getContent());
             System.out.println("🔌 Spring Boot: Sender: " + messageDTO.getSenderEmail());
@@ -232,6 +246,7 @@ public class ChatController {
             redisChatPublisher.publish(new ChatMessagePayload(
                     dto.getRoomId(),
                     dto.getSenderEmail(),
+                    dto.getSenderName(),
                     dto.getReceiverEmail(),
                     dto.getContent(),
                     dto.getTimestamp(),
