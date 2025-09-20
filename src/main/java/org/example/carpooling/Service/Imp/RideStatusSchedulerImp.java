@@ -1,5 +1,6 @@
 package org.example.carpooling.Service.Imp;
 
+import jakarta.transaction.Transactional;
 import org.example.carpooling.Entity.Booking;
 import org.example.carpooling.Entity.Rides;
 import org.example.carpooling.Entity.Status.BookingStatus;
@@ -24,7 +25,8 @@ public class RideStatusSchedulerImp implements RideStatusScheduler {
     BookingRepository bookingRepository;
 
     @Override
-    @Scheduled(fixedRate = 30000)
+    @Transactional
+    @Scheduled(fixedRate = 1000)
     public void updateOngoingRides() {
         LocalDateTime now = LocalDateTime.now();
         List<Booking> bookings = bookingRepository.findBookingByStatus(BookingStatus.ACCEPTED);
