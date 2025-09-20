@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -48,39 +49,32 @@ public class UserController
         }
     }
 
-    @Operation(summary = "Cập nhật thông tin cá nhân ",
-            description = "Thay đổi thông tin cá nhân")
-
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Thay đổi thông tin thành công"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Thay đổi thông tin thất bại")
-    })
     @PutMapping("/update-profile")
     @PreAuthorize("hasAnyRole('DRIVER', 'PASSENGER')")
     public ResponseEntity<ApiResponse<?>> updateProfile(
-            @RequestPart UserUpdateRequestDTO userUpdateRequestDTO,
+            @RequestPart("user") UserUpdateRequestDTO userDTO,
+            @RequestPart(value = "avatarImageUrl", required = false) MultipartFile avatarImageUrl,
+            @RequestPart(value = "licenseImageUrl", required = false) MultipartFile licenseImageUrl,
+            @RequestPart(value = "vehicleImageUrl", required = false) MultipartFile vehicleImageUrl,
             HttpServletRequest request) {
 
         try {
             String token = jwtUtil.extractTokenFromRequest(request);
-            String email = jwtUtil.extractUsername(token);
-            Optional<Users> optionalUser = userService.findByEmail(email);
 
-            if (optionalUser.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ApiResponse<>(false, "Không tìm thấy người dùng", null));
-            }
+            String message = userService.updateProfile(
+                    token,
+                    userDTO,
+                    avatarImageUrl,
+                    licenseImageUrl,
+                    vehicleImageUrl
+            );
 
-            Users user = optionalUser.get();
-
-            // Gọi service update
-            userService.updateProfile(token,userUpdateRequestDTO);
-
-            return ResponseEntity.ok(new ApiResponse<>(true, "Cập nhật hồ sơ thành công", HttpStatus.OK.value()));
-
+            return ResponseEntity.ok(
+                    new ApiResponse<>(true, message, HttpStatus.OK.value())
+            );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(false, "Cập nhật hồ sơ thất bại: " + e.getMessage(),HttpStatus.BAD_REQUEST.value()));
+                    .body(new ApiResponse<>(false, "Cập nhật hồ sơ thất bại: " + e.getMessage(), HttpStatus.BAD_REQUEST.value()));
         }
     }
 

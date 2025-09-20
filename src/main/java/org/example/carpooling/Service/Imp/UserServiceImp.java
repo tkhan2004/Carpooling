@@ -173,7 +173,13 @@ public class UserServiceImp implements UserService {
 
     // UserServiceImp.java
     @Override
-    public String updateProfile(String token, UserUpdateRequestDTO userUpdateDTO) throws IOException {
+    public String updateProfile(
+            String token,
+            UserUpdateRequestDTO userUpdateDTO,
+            MultipartFile avatarFile,
+            MultipartFile licenseFile,
+            MultipartFile vehicleFile) throws IOException {
+
         String email = jwtUtil.extractUsername(token);
         Optional<Users> optionalUser = userRepository.findByEmail(email);
 
@@ -182,20 +188,20 @@ public class UserServiceImp implements UserService {
         }
 
         Users user = optionalUser.get();
-        user.setFullName(userUpdateDTO.getFullName());
-        user.setPhone(userUpdateDTO.getPhone());
 
-
+        // Update text fields
+        if (userUpdateDTO.getFullName() != null) {
+            user.setFullName(userUpdateDTO.getFullName());
+        }
+        if (userUpdateDTO.getPhone() != null) {
+            user.setPhone(userUpdateDTO.getPhone());
+        }
 
         // ✅ Update avatar cho mọi user
-        MultipartFile avatarFile = userUpdateDTO.getAvatarImageUrl();
         if (avatarFile != null && !avatarFile.isEmpty()) {
-            // Xoá ảnh cũ
             if (user.getAvatarImagePublicId() != null) {
                 cloudinaryService.deleteFile(user.getAvatarImagePublicId());
             }
-
-            // Upload ảnh mới
             Map<String, String> avatarData = cloudinaryService.upLoadFile(avatarFile);
             user.setAvatarImage(avatarData.get("url"));
             user.setAvatarImagePublicId(avatarData.get("publicId"));
@@ -209,28 +215,27 @@ public class UserServiceImp implements UserService {
             boolean needApproval = false;
 
             // Update license image
-            if (userUpdateDTO.getLicenseImageUrl() != null && !userUpdateDTO.getLicenseImageUrl().isEmpty()) {
+            if (licenseFile != null && !licenseFile.isEmpty()) {
                 if (vehicle.getLicenseImagePublicId() != null) {
                     cloudinaryService.deleteFile(vehicle.getLicenseImagePublicId());
                 }
-                Map<String, String> licenseData = cloudinaryService.upLoadFile(userUpdateDTO.getLicenseImageUrl());
+                Map<String, String> licenseData = cloudinaryService.upLoadFile(licenseFile);
                 vehicle.setLicenseImageUrl(licenseData.get("url"));
                 vehicle.setLicenseImagePublicId(licenseData.get("publicId"));
                 needApproval = true;
             }
 
             // Update vehicle image
-            if (userUpdateDTO.getVehicleImageUrl() != null && !userUpdateDTO.getVehicleImageUrl().isEmpty()) {
+            if (vehicleFile != null && !vehicleFile.isEmpty()) {
                 if (vehicle.getVehicleImagePublicId() != null) {
                     cloudinaryService.deleteFile(vehicle.getVehicleImagePublicId());
                 }
-                Map<String, String> vehicleData = cloudinaryService.upLoadFile(userUpdateDTO.getVehicleImageUrl());
+                Map<String, String> vehicleData = cloudinaryService.upLoadFile(vehicleFile);
                 vehicle.setVehicleImageUrl(vehicleData.get("url"));
                 vehicle.setVehicleImagePublicId(vehicleData.get("publicId"));
                 needApproval = true;
             }
 
-            // Nếu có thay đổi ảnh giấy tờ → set trạng thái PENDING
             if (needApproval) {
                 user.setStatus(DriverStatus.PENDING);
             }
@@ -240,9 +245,7 @@ public class UserServiceImp implements UserService {
 
         userRepository.save(user);
         return "Cập nhật thành công";
-
     }
-
     @Override
     public List<?> getUsersByRole(String role) {
         List<Users> users = userRepository.findAllByRole(role);
@@ -345,4 +348,3 @@ public class UserServiceImp implements UserService {
     }
 
 }
-

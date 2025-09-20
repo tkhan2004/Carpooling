@@ -19,7 +19,12 @@ public interface UserService {
                          MultipartFile vehicleImage);
     Optional<Users> findByEmail(String email);
     String changePass(String token, ChangePassDTO changePassDTO);
-    String updateProfile(String token, UserUpdateRequestDTO userUpdateDTO) throws IOException;
+    public String updateProfile(
+            String token,
+            UserUpdateRequestDTO userUpdateDTO,
+            MultipartFile avatarFile,
+            MultipartFile licenseFile,
+            MultipartFile vehicleFile) throws IOException  ;
     List<?> getUsersByRole(String roleName);
     boolean rejectUser(Long id,String rejectionReason);
     boolean approvedUser(Long id);
