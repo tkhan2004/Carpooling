@@ -45,6 +45,69 @@ Carpooling là một hệ thống giúp người có xe chia sẻ chỗ trống 
 - 📂 Upload ảnh: Multipart File + lưu thư mục máy local
 - 🛠️ Maven (Quản lý dependency)
 
+---
+## Sản phẩm
+<h3 align="center">1. Authentication & Role Selection Flow</h3>
+<p align="center">
+  <i>Hệ thống phân chia luồng người dùng rõ ràng cho Tài xế và Hành khách ngay từ đầu, được bảo mật bằng Spring Security & JWT.</i>
+</p>
+
+<table align="center">
+  <tr>
+    <td align="center" width="50%">
+      <img src="images/2.jpg" width="100%" alt="Passenger Onboarding">
+      <br />
+      <b>Passenger Flow</b><br>
+      (Role Selection & Login)
+    </td>
+    <td align="center" width="50%">
+      <img src="images/1.jpg" width="100%" alt="Driver Onboarding">
+      <br />
+      <b>Driver Flow</b><br>
+      (Driver Specific Login Logic)
+    </td>
+  </tr>
+</table>
+
+<br/>
+
+<h3 align="center">2. Core Dashboard & Trip Matching</h3>
+<p align="center">
+  <i>Giao diện chính nơi thuật toán Matching tìm kiếm chuyến đi phù hợp.</i>
+</p>
+
+<div align="center">
+  <img src="images/5.jpg" width="100%" alt="Main Dashboards">
+  <br />
+  <b>Real-time Dashboard</b><br>
+  (Driver & Passenger Home Screens)
+</div>
+
+<br/>
+
+<h3 align="center">3. Feature Deep-dive: Booking, Chat & History</h3>
+<p align="center">
+  <i>Các chức năng chuyên sâu: Quản lý chuyến đi, Lịch sử đặt chỗ và Chat thời gian thực qua WebSocket.</i>
+</p>
+
+<table align="center">
+  <tr>
+    <td align="center" width="50%">
+      <img src="images/3.jpg" width="100%" alt="Driver Features">
+      <br />
+      <b>Driver Operations</b><br>
+      (Create Trip, Route Map, Profile)
+    </td>
+    <td align="center" width="50%">
+      <img src="images/4.jpg" width="100%" alt="Passenger Features">
+      <br />
+      <b>Passenger Operations</b><br>
+      (Booking History, WebSocket Chat, Notifications)
+    </td>
+  </tr>
+</table>
+
+---
 
 # API Documentation - Carpooling Application
 
