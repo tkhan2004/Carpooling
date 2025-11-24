@@ -49,19 +49,19 @@ Carpooling là một hệ thống giúp người có xe chia sẻ chỗ trống 
 ## Sản phẩm
 <h3 align="center">1. Authentication & Role Selection Flow</h3>
 <p align="center">
-  <i>Hệ thống phân chia luồng người dùng rõ ràng cho Tài xế và Hành khách ngay từ đầu, được bảo mật bằng Spring Security & JWT.</i>
+  <i>Hệ thống phân chia luồng người dùng rõ ràng cho Tài xế và Hành khách, bảo mật bằng Spring Security & JWT.</i>
 </p>
 
 <table align="center">
   <tr>
     <td align="center" width="50%">
-      <img src="images/2.jpg" width="100%" alt="Passenger Onboarding">
+      <img src="https://github.com/user-attachments/assets/73042d09-e2b5-49a9-8295-986a082d8fd4" width="100%" alt="Passenger Onboarding">
       <br />
       <b>Passenger Flow</b><br>
       (Role Selection & Login)
     </td>
     <td align="center" width="50%">
-      <img src="images/1.jpg" width="100%" alt="Driver Onboarding">
+      <img src="https://github.com/user-attachments/assets/cd863f18-6d70-4895-be1b-a5d584cbe368" width="100%" alt="Driver Onboarding">
       <br />
       <b>Driver Flow</b><br>
       (Driver Specific Login Logic)
@@ -71,13 +71,13 @@ Carpooling là một hệ thống giúp người có xe chia sẻ chỗ trống 
 
 <br/>
 
-<h3 align="center">2. Core Dashboard & Trip Matching</h3>
+<h3 align="center">2. Core Dashboard</h3>
 <p align="center">
-  <i>Giao diện chính nơi thuật toán Matching tìm kiếm chuyến đi phù hợp.</i>
+  <i>Giao diện chính </i>
 </p>
 
 <div align="center">
-  <img src="images/5.jpg" width="100%" alt="Main Dashboards">
+  <img src="https://github.com/user-attachments/assets/e01f16e8-dd82-4cb7-a798-25b646e5cdf6" width="100%" alt="Real-time Dashboard">
   <br />
   <b>Real-time Dashboard</b><br>
   (Driver & Passenger Home Screens)
@@ -93,16 +93,16 @@ Carpooling là một hệ thống giúp người có xe chia sẻ chỗ trống 
 <table align="center">
   <tr>
     <td align="center" width="50%">
-      <img src="images/3.jpg" width="100%" alt="Driver Features">
+      <img src="https://github.com/user-attachments/assets/138e46f7-f1eb-4954-bb34-07c26e0bf6ed" width="100%" alt="Driver Operations">
       <br />
-      <b>Driver Operations</b><br>
+      <b>Driver </b><br>
       (Create Trip, Route Map, Profile)
     </td>
     <td align="center" width="50%">
-      <img src="images/4.jpg" width="100%" alt="Passenger Features">
+      <img src="https://github.com/user-attachments/assets/4435c94e-efb0-4d14-a144-35297a7e5af2" width="100%" alt="Passenger Operations">
       <br />
-      <b>Passenger Operations</b><br>
-      (Booking History, WebSocket Chat, Notifications)
+      <b>Passenger </b><br>
+      (Booking History, WebSocket Chat)
     </td>
   </tr>
 </table>
